@@ -23,7 +23,7 @@ var progressMax int
 
 var slowed bool
 
-func (util RequestFlow) SetupFlags() []tool.UtilData {
+func (util misc.RequestFlow) SetupFlags() []tool.UtilData {
 	var flags []tool.FlagData
 
 	flags = append(flags,
@@ -156,9 +156,9 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 		wg429.Wait()
 	}
 
-	CreateRequest(&requestData)
+	misc.CreateRequest(&requestData)
 	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (misc.EOF().MatchString(requestData.Error.Error()) || misc.Timeout().MatchString(requestData.Error.Error()))) {
-		PrintUrl(requestData, false)
+		misc.PrintUrl(requestData, false)
 		slowDown(&check429)
 		work(check429, requestData, requestDataChan)
 		return
