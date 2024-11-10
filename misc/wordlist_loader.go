@@ -1,4 +1,4 @@
-package misc
+package output
 
 import (
 	"encoding/json"
@@ -77,15 +77,15 @@ func loadWordlist(file string) ([]byte, []string) {
 }
 
 // Use for debugging only !!!
-func loadLocal(file string) []string {
-	fmt.Println("!!! LOCAL WORDLIST - DEBUG ONLY !!!")
+// func loadLocal(file string) []string {
+// 	fmt.Println("!!! LOCAL WORDLIST - DEBUG ONLY !!!")
 
-	result, err := Read(file)
+// 	result, err := Read(file)
 
-	errorCheck(file, err)
+// 	errorCheck(file, err)
 
-	return result
-}
+// 	return result
+// }
 
 func errorCheck(wordlist string, err error) {
 	if err == nil {
