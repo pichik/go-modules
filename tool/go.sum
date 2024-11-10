@@ -1,2 +1,4 @@
 github.com/pichik/go-modules/output v0.0.0-20241110115903-d369fb5d1bbb h1:5ijTcqumYj3D0wJOuMScz5JKiuImAva5ipWZP3Cl4Jc=
 github.com/pichik/go-modules/output v0.0.0-20241110115903-d369fb5d1bbb/go.mod h1:L0jKlUwProp64f3J4egF0xgRMDixkxC/0ITReHmd4IA=
+github.com/pichik/go-modules/output v0.0.0-20241110152422-b7dfdde87de3 h1:BsNA8ngNpi2AivWMhqeXWiO3jbehTqKY2gNhyK7wJ9c=
+github.com/pichik/go-modules/output v0.0.0-20241110152422-b7dfdde87de3/go.mod h1:L0jKlUwProp64f3J4egF0xgRMDixkxC/0ITReHmd4IA=
