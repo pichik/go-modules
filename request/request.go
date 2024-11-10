@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pichik/go-modules/misc"
 	"github.com/pichik/go-modules/tool"
 )
 
@@ -26,7 +27,7 @@ var headersFlag tool.ArrayStringFlag
 var client *http.Client
 var timeout time.Duration
 
-var RequestBase RequestData
+var RequestBase misc.RequestData
 var requestCancel context.CancelFunc
 
 func (util Request) SetupFlags() []tool.UtilData {
@@ -128,9 +129,9 @@ func (util Request) SetupFlags() []tool.UtilData {
 
 func (util Request) SetupData() {
 
-	Normalize = normalizeFlag
+	misc.Normalize = normalizeFlag
 
-	RequestBase = RequestData{
+	RequestBase = misc.RequestData{
 		Method:  httpMethodFlag,
 		Cookies: setCookies(cookieFlag),
 		Headers: setHeaders(headersFlag),
@@ -144,7 +145,7 @@ func (util Request) SetupData() {
 	interruptMonitor()
 }
 
-func CreateRequest(requestData *RequestData) {
+func CreateRequest(requestData *misc.RequestData) {
 	url := requestData.ParsedUrl.Url
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*timeout)

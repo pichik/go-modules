@@ -1,16 +1,14 @@
-package request
+package misc
 
 import (
 	"fmt"
 	"regexp"
 	"sync"
-
-	"github.com/pichik/go-modules/output"
 )
 
-func GetData(text string, parsedUrl *ParsedUrl) ([]output.ScrapData, []ParsedUrl, []ParsedUrl) {
-	scrapedData := output.DataScrapRegex()
-	retreivedDataChan := make(chan output.ScrapData, len(scrapedData))
+func GetData(text string, parsedUrl *ParsedUrl) ([]ScrapData, []ParsedUrl, []ParsedUrl) {
+	scrapedData := DataScrapRegex()
+	retreivedDataChan := make(chan ScrapData, len(scrapedData))
 	var wg sync.WaitGroup
 
 	var completeUrls []ParsedUrl
@@ -18,12 +16,12 @@ func GetData(text string, parsedUrl *ParsedUrl) ([]output.ScrapData, []ParsedUrl
 
 	for _, s := range scrapedData {
 		wg.Add(1)
-		go func(s output.ScrapData, scraped chan output.ScrapData) {
+		go func(s ScrapData, scraped chan ScrapData) {
 			if s.Name == "urls" {
 				findUrls(&s, text, parsedUrl, &completeUrls, &incompleteUrls)
 			} else {
 				for _, fd := range s.Regex.FindAllStringSubmatch(text, -1) {
-					s.Results = append(s.Results, output.Highlight(fd[s.RegexPart], s.Highlight))
+					s.Results = append(s.Results, Highlight(fd[s.RegexPart], s.Highlight))
 				}
 				Unique(&s.Results)
 			}
@@ -45,7 +43,7 @@ func GetData(text string, parsedUrl *ParsedUrl) ([]output.ScrapData, []ParsedUrl
 	return scrapedData, completeUrls, incompleteUrls
 }
 
-func findUrls(urlRegex *output.ScrapData, text string, currentUrl *ParsedUrl, completeUrls *[]ParsedUrl, incompleteUrls *[]ParsedUrl) {
+func findUrls(urlRegex *ScrapData, text string, currentUrl *ParsedUrl, completeUrls *[]ParsedUrl, incompleteUrls *[]ParsedUrl) {
 	foundUrls := urlRegex.Regex.FindAllStringSubmatch(text, -1)
 
 	for _, fu := range foundUrls {
@@ -53,7 +51,7 @@ func findUrls(urlRegex *output.ScrapData, text string, currentUrl *ParsedUrl, co
 
 		if parsedUrl.Error != nil {
 			urlRegex.Results = append(urlRegex.Results, parsedUrl.Url)
-			if output.ExtensionPass(parsedUrl.Extension) {
+			if ExtensionPass(parsedUrl.Extension) {
 				*incompleteUrls = append(*incompleteUrls, parsedUrl)
 			}
 			continue
@@ -66,7 +64,7 @@ func findUrls(urlRegex *output.ScrapData, text string, currentUrl *ParsedUrl, co
 		}
 		urlRegex.Results = append(urlRegex.Results, parsedUrl.Url)
 
-		if output.ExtensionPass(parsedUrl.Extension) {
+		if ExtensionPass(parsedUrl.Extension) {
 			*completeUrls = append(*completeUrls, parsedUrl)
 		}
 

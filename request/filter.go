@@ -3,7 +3,7 @@ package request
 import (
 	"regexp"
 
-	"github.com/pichik/go-modules/output"
+	"github.com/pichik/go-modules/misc"
 	"github.com/pichik/go-modules/tool"
 )
 
@@ -45,19 +45,19 @@ func (util Filter) SetupData() {
 	filterRegex = regexp.MustCompile(filterFlag)
 }
 
-func urlFilterPass(parsedUrl ParsedUrl) bool {
+func urlFilterPass(parsedUrl misc.ParsedUrl) bool {
 	if scopeRegex != nil && !scopeRegex.MatchString(parsedUrl.Domain) {
 		return false
 	}
 	if filterRegex != nil && filterRegex.MatchString(parsedUrl.Path) {
 		return false
 	}
-	return output.ExtensionPass(parsedUrl.Extension)
+	return misc.ExtensionPass(parsedUrl.Extension)
 }
 
 // Filter urls from domain scope, uselless paths and extensions
-func FilterUrls(urls []ParsedUrl) []ParsedUrl {
-	var filteredUrls []ParsedUrl
+func FilterUrls(urls []misc.ParsedUrl) []misc.ParsedUrl {
+	var filteredUrls []misc.ParsedUrl
 
 	for _, url := range urls {
 		if urlFilterPass(url) {

@@ -5,10 +5,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/pichik/go-modules/misc"
 	"github.com/pichik/go-modules/output"
 )
 
-func PrintUrl(requestData RequestData, save bool) {
+func PrintUrl(requestData misc.RequestData, save bool) {
 	var redirect string
 	color := output.White
 
@@ -34,7 +35,7 @@ func PrintUrl(requestData RequestData, save bool) {
 	method := "[" + requestData.Method + "]"
 	contentType := fmt.Sprintf("[%s(%d)]", requestData.ResponseContentType, requestData.ResponseContentLength)
 
-	formattedOutput := fmt.Sprintf("\r%s%9s [%.3d] %23s [ %s ] %s%s", color, method, requestData.ResponseStatus, contentType, BuildUrl(requestData.ParsedUrl, "1234"), redirect, output.White)
+	formattedOutput := fmt.Sprintf("\r%s%9s [%.3d] %23s [ %s ] %s%s", color, method, requestData.ResponseStatus, contentType, misc.BuildUrl(requestData.ParsedUrl, "1234"), redirect, output.White)
 
 	fmt.Printf("%s\n", formattedOutput)
 	// ResultOutput(requestData, formattedOutput)

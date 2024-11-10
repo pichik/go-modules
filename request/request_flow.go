@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pichik/go-modules/misc"
 	"github.com/pichik/go-modules/output"
 	"github.com/pichik/go-modules/tool"
 )
@@ -68,28 +69,28 @@ func (util RequestFlow) SetupData() {
 		u.SetupData()
 	}
 	//Separate previous found data from current
-	DataSeparator()
+	misc.DataSeparator()
 }
 
 // check what is tested and add rest to queue (dont add it to the tested file)
-func SetupQueue(parsedUrls []ParsedUrl, urlSpec string) {
+func SetupQueue(parsedUrls []misc.ParsedUrl, urlSpec string) {
 	parsedUrls = FilterUrls(parsedUrls)
-	urls := BuildUrls(parsedUrls, urlSpec)
-	FillQueue(urls, ignoreTestedFlag)
+	urls := misc.BuildUrls(parsedUrls, urlSpec)
+	misc.FillQueue(urls, ignoreTestedFlag)
 }
 
 // Simple flow with urls only
-func FlowStart(urls []ParsedUrl, iTool IFlowTool) {
+func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool) {
 	var wg sync.WaitGroup
 	in := throughInfinite(&wg, iTool)
 
-	var requestData = make([]RequestData, len(urls))
+	var requestData = make([]misc.RequestData, len(urls))
 	for i, u := range urls {
 		requestData[i] = RequestBase
 		requestData[i].ParsedUrl = u
 		//If user didnt set origin, set it to requested domainz
 		if requestData[i].Headers["Origin"] == "" {
-			requestData[i].Headers["Origin"] = BuildUrl(requestData[i].ParsedUrl, "12")
+			requestData[i].Headers["Origin"] = misc.BuildUrl(requestData[i].ParsedUrl, "12")
 		}
 	}
 
@@ -99,7 +100,7 @@ func FlowStart(urls []ParsedUrl, iTool IFlowTool) {
 }
 
 // Flow with customable request data, headers etc..
-func CustomFlowStart(requestData []RequestData, iTool IFlowTool) {
+func CustomFlowStart(requestData []misc.RequestData, iTool IFlowTool) {
 	var wg sync.WaitGroup
 	in := throughInfinite(&wg, iTool)
 	flow(requestData, in)
@@ -107,7 +108,7 @@ func CustomFlowStart(requestData []RequestData, iTool IFlowTool) {
 	wg.Wait()
 }
 
-func flow(requestData []RequestData, requestDataChan chan<- interface{}) {
+func flow(requestData []misc.RequestData, requestDataChan chan<- interface{}) {
 	SetSartTime()
 
 	currentThreads = threadsFlag
@@ -119,11 +120,11 @@ func flow(requestData []RequestData, requestDataChan chan<- interface{}) {
 	Resulted = 0
 	progressMax = len(requestData) * (1 + Repeats())
 
-	queue := make(chan RequestData, 15)
+	queue := make(chan misc.RequestData, 15)
 
 	for i := 0; i < 15; i++ {
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, m *sync.Mutex, queue chan RequestData, requestDataChan chan<- interface{}) {
+		go func(wg *sync.WaitGroup, m *sync.Mutex, queue chan misc.RequestData, requestDataChan chan<- interface{}) {
 			defer wg.Done()
 			for requestData := range queue {
 				<-limiter
@@ -150,7 +151,7 @@ func flow(requestData []RequestData, requestDataChan chan<- interface{}) {
 
 var wg429 sync.WaitGroup
 
-func work(check429 bool, requestData RequestData, requestDataChan chan<- interface{}) {
+func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- interface{}) {
 
 	if slowed && !check429 {
 		wg429.Wait()
@@ -191,11 +192,11 @@ func work(check429 bool, requestData RequestData, requestDataChan chan<- interfa
 	}
 }
 
-func FlowResults(requestData RequestData, m *sync.Mutex) ([]output.ScrapData, []ParsedUrl) {
-	foundData, completeUrls, incompleteUrls := GetData(requestData.ResponseBody, &requestData.ParsedUrl)
+func FlowResults(requestData misc.RequestData, m *sync.Mutex) ([]output.ScrapData, []misc.ParsedUrl) {
+	foundData, completeUrls, incompleteUrls := misc.GetData(requestData.ResponseBody, &requestData.ParsedUrl)
 
 	if requestData.ResponseHeaders.Get("Location") != "" {
-		data, comp, incomp := GetData(requestData.ResponseHeaders.Get("Location"), &requestData.ParsedUrl)
+		data, comp, incomp := misc.GetData(requestData.ResponseHeaders.Get("Location"), &requestData.ParsedUrl)
 		foundData = append(foundData, data...)
 		completeUrls = append(completeUrls, comp...)
 		incompleteUrls = append(incompleteUrls, incomp...)
@@ -204,12 +205,12 @@ func FlowResults(requestData RequestData, m *sync.Mutex) ([]output.ScrapData, []
 	urlToSave := requestData.ParsedUrl.Url
 	completeUrls = FilterUrls(completeUrls)
 	// m.Lock()
-	AddToTested(urlToSave)
-	DataOutput(foundData, GetUrls(completeUrls), GetUrls(incompleteUrls))
-	CorsOutput(requestData.ResponseHeaders, urlToSave)
+	misc.AddToTested(urlToSave)
+	misc.DataOutput(foundData, misc.GetUrls(completeUrls), misc.GetUrls(incompleteUrls))
+	misc.CorsOutput(requestData.ResponseHeaders, urlToSave)
 
 	if requestData.ResponseStatus != 404 && requestData.ResponseStatus != 405 && requestData.ResponseContentLength != 0 {
-		ResponseOutput(requestData)
+		misc.ResponseOutput(requestData)
 	}
 
 	// m.Unlock()
@@ -287,7 +288,7 @@ func throughInfinite(wg *sync.WaitGroup, iTool IFlowTool) chan<- interface{} {
 			wg.Add(1)
 			localV := v
 			go func() {
-				requestData := localV.(RequestData)
+				requestData := localV.(misc.RequestData)
 				iTool.Results(requestData, &m)
 				Resulted++
 				PrintProgress(progressCounter, progressMax)
