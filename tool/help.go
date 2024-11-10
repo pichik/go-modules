@@ -8,11 +8,11 @@ import (
 )
 
 func PrintLogo() {
-	fmt.Printf("%s%s%s\n", output.Purple, logo(), output.output.White)
+	fmt.Printf("%s%s%s\n", output.Purple, logo(), output.White)
 }
 
 func PrintToolName(name string) {
-	fmt.Printf("%s%s%s\n", output.Red, name, output.output.White)
+	fmt.Printf("%s%s%s\n", output.Red, name, output.White)
 }
 
 func PrintDefaultHelp() {
@@ -42,7 +42,7 @@ func PrintToolHelp(toolData ToolData) {
 
 	//INCLUDED UTILS INFO
 	for _, util := range toolData.Utils {
-		fmt.Printf("%s%s\n%s", Green, util.Name, output.White)
+		fmt.Printf("%s%s\n%s", output.Green, util.Name, output.White)
 
 		//Print Flags
 		if len(util.FlagDatas) > 0 {

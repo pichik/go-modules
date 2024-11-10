@@ -1,4 +1,4 @@
-module github.com/pichik/go-modules/flag
+module github.com/pichik/go-modules/utils/request
 
 go 1.23.2
 

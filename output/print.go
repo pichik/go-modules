@@ -48,7 +48,7 @@ func Highlight(text string, hightlight string) string {
 	return text
 }
 
-func readableTime(seconds int) string {
+func ReadableTime(seconds int) string {
 	hours := int(seconds / (60 * 60) % 24)
 	minutes := int(seconds/60) % 60
 
