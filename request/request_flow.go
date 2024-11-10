@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/pichik/go-modules/misc"
-	"github.com/pichik/go-modules/output"
 	"github.com/pichik/go-modules/tool"
 )
 
@@ -46,7 +45,7 @@ func (util RequestFlow) SetupFlags() []tool.UtilData {
 	flags = append(flags,
 		tool.FlagData{
 			Name:        "o",
-			Description: fmt.Sprintf("Output directory \n\t\t%s(Default: tool name)%s", output.Gray, output.White),
+			Description: fmt.Sprintf("Output directory \n\t\t%s(Default: tool name)%s", misc.Gray, misc.White),
 			Required:    false,
 			Def:         "",
 			VarStr:      &outputDirFlag,
@@ -158,7 +157,7 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 	}
 
 	CreateRequest(&requestData)
-	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (output.EOF().MatchString(requestData.Error.Error()) || output.Timeout().MatchString(requestData.Error.Error()))) {
+	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (misc.EOF().MatchString(requestData.Error.Error()) || misc.Timeout().MatchString(requestData.Error.Error()))) {
 		PrintUrl(requestData, false)
 		slowDown(&check429)
 		work(check429, requestData, requestDataChan)
@@ -192,7 +191,7 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 	}
 }
 
-func FlowResults(requestData misc.RequestData, m *sync.Mutex) ([]output.ScrapData, []misc.ParsedUrl) {
+func FlowResults(requestData misc.RequestData, m *sync.Mutex) ([]misc.ScrapData, []misc.ParsedUrl) {
 	foundData, completeUrls, incompleteUrls := misc.GetData(requestData.ResponseBody, &requestData.ParsedUrl)
 
 	if requestData.ResponseHeaders.Get("Location") != "" {

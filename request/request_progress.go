@@ -6,36 +6,35 @@ import (
 	"time"
 
 	"github.com/pichik/go-modules/misc"
-	"github.com/pichik/go-modules/output"
 )
 
 func PrintUrl(requestData misc.RequestData, save bool) {
 	var redirect string
-	color := output.White
+	color := misc.White
 
 	switch requestData.ResponseStatus {
 	case 0:
-		color = output.Gray
+		color = misc.Gray
 	case 200, 204:
-		color = output.Green
+		color = misc.Green
 	case 301, 303, 302:
-		redirect = fmt.Sprintf(" ->%s %s", output.White, requestData.ResponseHeaders.Get("Location"))
-		color = output.Yellow
+		redirect = fmt.Sprintf(" ->%s %s", misc.White, requestData.ResponseHeaders.Get("Location"))
+		color = misc.Yellow
 	case 400, 500, 501, 422:
-		color = output.Blue
+		color = misc.Blue
 	case 403, 401:
-		color = output.Purple
+		color = misc.Purple
 	case 404, 429, 410:
-		color = output.Red
+		color = misc.Red
 	case 405:
-		color = output.Orange
+		color = misc.Orange
 	default:
-		color = output.White
+		color = misc.White
 	}
 	method := "[" + requestData.Method + "]"
 	contentType := fmt.Sprintf("[%s(%d)]", requestData.ResponseContentType, requestData.ResponseContentLength)
 
-	formattedOutput := fmt.Sprintf("\r%s%9s [%.3d] %23s [ %s ] %s%s", color, method, requestData.ResponseStatus, contentType, misc.BuildUrl(requestData.ParsedUrl, "1234"), redirect, output.White)
+	formattedOutput := fmt.Sprintf("\r%s%9s [%.3d] %23s [ %s ] %s%s", color, method, requestData.ResponseStatus, contentType, misc.BuildUrl(requestData.ParsedUrl, "1234"), redirect, misc.White)
 
 	fmt.Printf("%s\n", formattedOutput)
 	// ResultOutput(requestData, formattedOutput)
@@ -56,7 +55,7 @@ func PrintProgress(curr int, max int) {
 			estimatedTime = max / persec
 		}
 	}
-	fmt.Fprintf(os.Stderr, "%sProgress: [(%d/%d)/%d | %s/%s]", "\r", Resulted, curr, max, output.ReadableTime(seconds), output.ReadableTime(estimatedTime))
+	fmt.Fprintf(os.Stderr, "%sProgress: [(%d/%d)/%d | %s/%s]", "\r", Resulted, curr, max, misc.ReadableTime(seconds), misc.ReadableTime(estimatedTime))
 }
 
 func SetSartTime() {

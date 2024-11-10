@@ -3,6 +3,7 @@ package request
 import (
 	"sync"
 
+	"github.com/pichik/go-modules/misc"
 	"github.com/pichik/go-modules/tool"
 )
 
@@ -32,5 +33,5 @@ type ITool interface {
 }
 
 type IFlowTool interface {
-	Results(requestData RequestData, m *sync.Mutex)
+	Results(requestData misc.RequestData, m *sync.Mutex)
 }
