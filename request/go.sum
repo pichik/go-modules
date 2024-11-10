@@ -1,6 +1,6 @@
 github.com/pichik/go-modules/misc v0.0.0-20241110175106-dabb3b994a1f h1:xLozVc+JOFquFJ3WdQShYCVvHhYqXyS7rzF1EnM58vs=
 github.com/pichik/go-modules/misc v0.0.0-20241110175106-dabb3b994a1f/go.mod h1:6j9N74TpWY91Ck2gS2hSgmAlh0u+egHQjyL/JD0jZSQ=
-github.com/pichik/go-modules/output v0.0.0-20241110115903-d369fb5d1bbb h1:5ijTcqumYj3D0wJOuMScz5JKiuImAva5ipWZP3Cl4Jc=
-github.com/pichik/go-modules/output v0.0.0-20241110115903-d369fb5d1bbb/go.mod h1:L0jKlUwProp64f3J4egF0xgRMDixkxC/0ITReHmd4IA=
 github.com/pichik/go-modules/tool v0.0.0-20241110132933-fe0c8d6680ea h1:FoFDgxicx3Fa8wtRW0l1tIrw4psY52MMFULfKZrulAE=
 github.com/pichik/go-modules/tool v0.0.0-20241110132933-fe0c8d6680ea/go.mod h1:1n7TNKD23ZKy1S4wsoGzoRf8QPooDw1+Uzgi09xcTUE=
+github.com/pichik/go-modules/tool v0.0.0-20241110172230-93dfeead239d h1:I1gYjaVFnaAhixIsISx2MJ27+AVTEeh7niChUWSj4nE=
+github.com/pichik/go-modules/tool v0.0.0-20241110172230-93dfeead239d/go.mod h1:1n7TNKD23ZKy1S4wsoGzoRf8QPooDw1+Uzgi09xcTUE=
