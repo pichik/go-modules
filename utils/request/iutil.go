@@ -17,6 +17,9 @@ type RequestFlow struct {
 type Repeater struct {
 	UtilData *tool.UtilData
 }
+type Filter struct {
+	UtilData *tool.UtilData
+}
 
 type IUtil interface {
 	SetupFlags() []tool.UtilData

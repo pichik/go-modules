@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/pichik/go-modules/output"
+	"github.com/pichik/go-modules/tool"
 )
 
 var outputDirFlag string
@@ -44,7 +45,7 @@ func (util RequestFlow) SetupFlags() []tool.UtilData {
 	flags = append(flags,
 		tool.FlagData{
 			Name:        "o",
-			Description: fmt.Sprintf("Output directory \n\t\t%s(Default: tool name)%s", misc.Gray, misc.White),
+			Description: fmt.Sprintf("Output directory \n\t\t%s(Default: tool name)%s", output.Gray, output.White),
 			Required:    false,
 			Def:         "",
 			VarStr:      &outputDirFlag,
@@ -72,7 +73,7 @@ func (util RequestFlow) SetupData() {
 
 // check what is tested and add rest to queue (dont add it to the tested file)
 func SetupQueue(parsedUrls []ParsedUrl, urlSpec string) {
-	parsedUrls = output.FilterUrls(parsedUrls)
+	parsedUrls = FilterUrls(parsedUrls)
 	urls := BuildUrls(parsedUrls, urlSpec)
 	FillQueue(urls, ignoreTestedFlag)
 }
@@ -156,8 +157,8 @@ func work(check429 bool, requestData RequestData, requestDataChan chan<- interfa
 	}
 
 	CreateRequest(&requestData)
-	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (misc.EOF().MatchString(requestData.Error.Error()) || misc.Timeout().MatchString(requestData.Error.Error()))) {
-		misc.PrintUrl(requestData, false)
+	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (output.EOF().MatchString(requestData.Error.Error()) || output.Timeout().MatchString(requestData.Error.Error()))) {
+		PrintUrl(requestData, false)
 		slowDown(&check429)
 		work(check429, requestData, requestDataChan)
 		return
@@ -176,8 +177,8 @@ func work(check429 bool, requestData RequestData, requestDataChan chan<- interfa
 		fmt.Printf("Back in game, threads set to: %d\n", currentThreads)
 	}
 
-	misc.PrintUrl(requestData, true)
-	misc.PrintProgress(progressCounter, progressMax)
+	PrintUrl(requestData, true)
+	PrintProgress(progressCounter, progressMax)
 	requestDataChan <- requestData
 	progressCounter++
 	//Send different method if allowed to see if 404 have some valid request methods
@@ -201,14 +202,14 @@ func FlowResults(requestData RequestData, m *sync.Mutex) ([]output.ScrapData, []
 	}
 
 	urlToSave := requestData.ParsedUrl.Url
-	completeUrls = output.FilterUrls(completeUrls)
+	completeUrls = FilterUrls(completeUrls)
 	// m.Lock()
-	output.AddToTested(urlToSave)
-	output.DataOutput(foundData, GetUrls(completeUrls), GetUrls(incompleteUrls))
-	output.CorsOutput(requestData.ResponseHeaders, urlToSave)
+	AddToTested(urlToSave)
+	DataOutput(foundData, GetUrls(completeUrls), GetUrls(incompleteUrls))
+	CorsOutput(requestData.ResponseHeaders, urlToSave)
 
 	if requestData.ResponseStatus != 404 && requestData.ResponseStatus != 405 && requestData.ResponseContentLength != 0 {
-		output.ResponseOutput(requestData)
+		ResponseOutput(requestData)
 	}
 
 	// m.Unlock()
