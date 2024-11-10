@@ -1,10 +1,12 @@
-package misc
+package output
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/pichik/go-modules/output"
 )
 
 const UrlDir = "urls/"
@@ -28,11 +30,11 @@ func SetToolDir(dir string) {
 func DataSeparator() {
 	//Separate previous found data from current
 	layout := fmt.Sprintf("-----------------------------------------%s", time.Now().Format("[02.01.2006][15:04:05]"))
-	Write(layout, incompleteUrlsFile, UrlDir)
-	Write(layout, completeUrlsFile, UrlDir)
+	output.output.Write(layout, incompleteUrlsFile, UrlDir)
+	output.output.Write(layout, completeUrlsFile, UrlDir)
 	for _, d := range DataScrapRegex() {
 		if d.Name != "urls" {
-			Write(layout, d.Name, DataDir)
+			output.output.Write(layout, d.Name, DataDir)
 		}
 	}
 }
@@ -46,8 +48,8 @@ func DataOutput(foundData []ScrapData, completeUrls []string, incompleteUrls []s
 		for _, d := range foundData {
 
 			if d.Name != "urls" {
-				new = Anew(d.Results, allFile, DataDir, true)
-				WriteAll(new, d.Name, DataDir)
+				new = output.Anew(d.Results, allFile, DataDir, true)
+				output.WriteAll(new, d.Name, DataDir)
 			}
 			//  else {
 			// 	urls = append(urls, d.Results...)
@@ -56,25 +58,25 @@ func DataOutput(foundData []ScrapData, completeUrls []string, incompleteUrls []s
 		}
 
 		// Unique(&urls)
-		// Anew(urls, allFile, UrlDir, true)
+		// output.Anew(urls, allFile, UrlDir, true)
 
-		Anew(incompleteUrls, incompleteUrlsFile, UrlDir, true)
-		Anew(completeUrls, completeUrlsFile, UrlDir, true)
+		output.Anew(incompleteUrls, incompleteUrlsFile, UrlDir, true)
+		output.Anew(completeUrls, completeUrlsFile, UrlDir, true)
 	} else {
 
 		for _, d := range foundData {
 			if d.Name != "urls" {
-				new = Anew(d.Results, allFile, DataDir, false)
-				WriteAll(new, d.Name, DataDir+toolDir)
+				new = output.Anew(d.Results, allFile, DataDir, false)
+				output.WriteAll(new, d.Name, DataDir+toolDir)
 			} else {
-				new = Anew(d.Results, allFile, UrlDir, false)
-				WriteAll(new, allFile, UrlDir+toolDir)
+				new = output.Anew(d.Results, allFile, UrlDir, false)
+				output.WriteAll(new, allFile, UrlDir+toolDir)
 			}
 		}
-		new = Anew(incompleteUrls, incompleteUrlsFile, UrlDir, false)
-		WriteAll(new, incompleteUrlsFile, UrlDir+toolDir)
-		new = Anew(completeUrls, completeUrlsFile, UrlDir, false)
-		WriteAll(new, completeUrlsFile, UrlDir+toolDir)
+		new = output.Anew(incompleteUrls, incompleteUrlsFile, UrlDir, false)
+		output.WriteAll(new, incompleteUrlsFile, UrlDir+toolDir)
+		new = output.Anew(completeUrls, completeUrlsFile, UrlDir, false)
+		output.WriteAll(new, completeUrlsFile, UrlDir+toolDir)
 	}
 
 }
@@ -85,7 +87,7 @@ func CorsOutput(responseHeaders http.Header, currentUrl string) {
 
 	if allowOrigin != "" && allowCreds != "" {
 		text := fmt.Sprintf("\033[32m%s\n\t\033[33mAccess-Control-Allow-Origin: \t\t%s\n\tAccess-Control-Allow-Credentials:\t%s\n\033[0m", currentUrl, allowOrigin, allowCreds)
-		Write(text, "cors", DataDir)
+		output.Write(text, "cors", DataDir)
 	}
 }
 
@@ -96,20 +98,20 @@ func ResponseOutput(requestData RequestData) {
 	queries, _ := json.MarshalIndent(requestData.ParsedUrl.Queries, "", "\t")
 	headers, _ := json.MarshalIndent(requestData.Headers, "", "\t")
 
-	Write(fmt.Sprintf("\033[33m%7s-----------------------------------------------------------------------------------------", ""), BuildUrl(requestData.ParsedUrl, "23"), dir)
-	Write(fmt.Sprintf("%7s: %s\n%7s: %d\n%7s: %s\n%7s: %s\n%7s: %s", "Method", requestData.Method, "Status", requestData.ResponseStatus, "Query", string(queries), "Headers", string(headers), "Body", requestData.RequestBody), BuildUrl(requestData.ParsedUrl, "23"), dir)
-	Write(fmt.Sprintf("%7s-----------------------------------------------------------------------------------------\033[0m", ""), BuildUrl(requestData.ParsedUrl, "23"), dir)
-	Write(requestData.ResponseBody, BuildUrl(requestData.ParsedUrl, "23"), dir)
+	output.Write(fmt.Sprintf("\033[33m%7s-----------------------------------------------------------------------------------------", ""), BuildUrl(requestData.ParsedUrl, "23"), dir)
+	output.Write(fmt.Sprintf("%7s: %s\n%7s: %d\n%7s: %s\n%7s: %s\n%7s: %s", "Method", requestData.Method, "Status", requestData.ResponseStatus, "Query", string(queries), "Headers", string(headers), "Body", requestData.RequestBody), BuildUrl(requestData.ParsedUrl, "23"), dir)
+	output.Write(fmt.Sprintf("%7s-----------------------------------------------------------------------------------------\033[0m", ""), BuildUrl(requestData.ParsedUrl, "23"), dir)
+	output.Write(requestData.ResponseBody, BuildUrl(requestData.ParsedUrl, "23"), dir)
 }
 
 func ResultOutput(requestData RequestData, formattedOutput string) {
 	if ExtensionPass(requestData.ParsedUrl) {
-		Write(formattedOutput, resultsFile, toolDir)
+		output.Write(formattedOutput, resultsFile, toolDir)
 	}
 }
 
 func AddToTested(url string) {
-	Write(url, testedFile, toolDir)
+	output.Write(url, testedFile, toolDir)
 	RemoveLine(url, queueFile, toolDir)
 }
 
@@ -121,16 +123,16 @@ func FillQueue(urls []string, ignoreTested bool) {
 		urlsToTest = urls
 		RemoveFile(toolDir + queueFile)
 	} else {
-		urlsToTest = Anew(urls, testedFile, toolDir, false)
+		urlsToTest = output.Anew(urls, testedFile, toolDir, false)
 	}
-	Anew(urlsToTest, queueFile, toolDir, true)
+	output.Anew(urlsToTest, queueFile, toolDir, true)
 }
 
 func CustomOutput(text string, filename string) {
-	Write(text, filename, toolDir)
+	output.Write(text, filename, toolDir)
 }
 func CustomOutputs(text []string, filename string) {
-	Anew(text, filename, toolDir, true)
+	output.Anew(text, filename, toolDir, true)
 }
 
 func ReadQueue() []string {
