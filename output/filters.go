@@ -47,7 +47,6 @@ func CompileFilters() {
 		sd.RegexPart = filter.RegexPart
 		sd.Regex = regexp.MustCompile(fmt.Sprintf(`%s`, filter.RegexString))
 		sd.RegexString = filter.RegexString
-
 		scrapData = append(scrapData, sd)
 	}
 

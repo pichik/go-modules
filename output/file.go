@@ -87,7 +87,6 @@ func Anew(endpoints []string, fileName string, directory string, add bool) []str
 
 // Remove matched line from file
 func RemoveLine(line string, fileName string, directory string) {
-
 	filePath := filepath.Join(directory, fileName)
 
 	f, m := OpenFile(directory, fileName)
