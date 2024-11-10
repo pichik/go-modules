@@ -1,3 +1,7 @@
+github.com/pichik/go-modules v1.2.2 h1:kGY52+C/4mHPzgcfY9yl+somOXf3BPfOOZMUBIW64Nw=
+github.com/pichik/go-modules v1.2.2/go.mod h1:Si7nWUXjvwEZ7rt0eW5iUxPNztd88PehSjN4H1YV1UQ=
+github.com/pichik/go-modules v1.2.3 h1:AN5Pj7SaslYdzeTD6tQfXEgvMVhtvNdObhr2eVY8lHE=
+github.com/pichik/go-modules v1.2.3/go.mod h1:Si7nWUXjvwEZ7rt0eW5iUxPNztd88PehSjN4H1YV1UQ=
 github.com/pichik/go-modules/output v0.0.0-20241110132010-c10980c22898 h1:W9o1Gyuj5od0RkMjk2dtJ/di/U3Yyu2PskU86orbYRU=
 github.com/pichik/go-modules/output v0.0.0-20241110132010-c10980c22898/go.mod h1:L0jKlUwProp64f3J4egF0xgRMDixkxC/0ITReHmd4IA=
 github.com/pichik/go-modules/output v0.0.0-20241110142429-a816e969e486 h1:qTfgLF36E2gZXGMTZw4g5yVWiFuQOGxFRFMJjtI1iAw=
