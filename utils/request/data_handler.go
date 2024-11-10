@@ -1,4 +1,4 @@
-package output
+package request
 
 import (
 	"encoding/json"
@@ -30,11 +30,11 @@ func SetToolDir(dir string) {
 func DataSeparator() {
 	//Separate previous found data from current
 	layout := fmt.Sprintf("-----------------------------------------%s", time.Now().Format("[02.01.2006][15:04:05]"))
-	output.output.Write(layout, incompleteUrlsFile, UrlDir)
-	output.output.Write(layout, completeUrlsFile, UrlDir)
+	output.Write(layout, incompleteUrlsFile, UrlDir)
+	output.Write(layout, completeUrlsFile, UrlDir)
 	for _, d := range DataScrapRegex() {
 		if d.Name != "urls" {
-			output.output.Write(layout, d.Name, DataDir)
+			output.Write(layout, d.Name, DataDir)
 		}
 	}
 }
