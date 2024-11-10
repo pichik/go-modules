@@ -1,4 +1,4 @@
-package misc
+package output
 
 import (
 	"fmt"
@@ -54,8 +54,8 @@ func CompileFilters() {
 }
 
 // Is not uselless file (jpe?g|png|svg|css|gif|ico|woff2?|ttf)
-func ExtensionPass(parsedUrl ParsedUrl) bool {
-	if extensions.MatchString(parsedUrl.Extension) {
+func ExtensionPass(extension string) bool {
+	if extensions.MatchString(extension) {
 		return false
 	}
 	return true

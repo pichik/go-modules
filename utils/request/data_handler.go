@@ -32,14 +32,14 @@ func DataSeparator() {
 	layout := fmt.Sprintf("-----------------------------------------%s", time.Now().Format("[02.01.2006][15:04:05]"))
 	output.Write(layout, incompleteUrlsFile, UrlDir)
 	output.Write(layout, completeUrlsFile, UrlDir)
-	for _, d := range DataScrapRegex() {
+	for _, d := range output.DataScrapRegex() {
 		if d.Name != "urls" {
 			output.Write(layout, d.Name, DataDir)
 		}
 	}
 }
 
-func DataOutput(foundData []ScrapData, completeUrls []string, incompleteUrls []string) {
+func DataOutput(foundData []output.ScrapData, completeUrls []string, incompleteUrls []string) {
 	var new []string
 	if toolDir == "crawler/" {
 
@@ -105,14 +105,14 @@ func ResponseOutput(requestData RequestData) {
 }
 
 func ResultOutput(requestData RequestData, formattedOutput string) {
-	if ExtensionPass(requestData.ParsedUrl) {
+	if output.ExtensionPass(requestData.ParsedUrl.Extension) {
 		output.Write(formattedOutput, resultsFile, toolDir)
 	}
 }
 
 func AddToTested(url string) {
 	output.Write(url, testedFile, toolDir)
-	RemoveLine(url, queueFile, toolDir)
+	output.RemoveLine(url, queueFile, toolDir)
 }
 
 func FillQueue(urls []string, ignoreTested bool) {
@@ -121,7 +121,7 @@ func FillQueue(urls []string, ignoreTested bool) {
 
 	if ignoreTested {
 		urlsToTest = urls
-		RemoveFile(toolDir + queueFile)
+		output.RemoveFile(toolDir + queueFile)
 	} else {
 		urlsToTest = output.Anew(urls, testedFile, toolDir, false)
 	}
@@ -136,6 +136,6 @@ func CustomOutputs(text []string, filename string) {
 }
 
 func ReadQueue() []string {
-	content, _ := Read(toolDir + queueFile)
+	content, _ := output.Read(toolDir + queueFile)
 	return content
 }

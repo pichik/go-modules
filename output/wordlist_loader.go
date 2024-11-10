@@ -1,4 +1,4 @@
-package misc
+package output
 
 import (
 	"encoding/json"
@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
-	"github.com/pichik/go-modules/output"
 )
 
 var ApiData API
@@ -93,6 +91,6 @@ func errorCheck(wordlist string, err error) {
 	if err == nil {
 		return
 	}
-	fmt.Printf("%sUnable to retreive %s:\n\t%s%s\nCheck %shttps://github.com/pichik/thetool/tree/main/wordlists%s for available wordlists\n", output.Red, wordlist, err, output.White, output.Blue, output.White)
+	fmt.Printf("%sUnable to retreive %s:\n\t%s%s\nCheck %shttps://github.com/pichik/thetool/tree/main/wordlists%s for available wordlists\n", Red, wordlist, err, White, Blue, White)
 	os.Exit(0)
 }
