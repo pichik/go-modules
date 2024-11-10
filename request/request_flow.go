@@ -200,7 +200,7 @@ func FlowResults(requestData misc.RequestData, m *sync.Mutex) ([]misc.ScrapData,
 		completeUrls = append(completeUrls, comp...)
 		incompleteUrls = append(incompleteUrls, incomp...)
 	}
-
+	fmt.Println("FLOW RESULTS")
 	urlToSave := requestData.ParsedUrl.Url
 	completeUrls = FilterUrls(completeUrls)
 	// m.Lock()

@@ -146,7 +146,6 @@ func (util Request) SetupData() {
 }
 
 func CreateRequest(requestData *misc.RequestData) {
-	fmt.Println("PICA MAAAAAAAAAAAAAT")
 	url := requestData.ParsedUrl.Url
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*timeout)
