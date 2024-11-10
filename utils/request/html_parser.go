@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
+
+	"github.com/pichik/go-modules/output"
 )
 
 func GetData(text string, parsedUrl *ParsedUrl) ([]output.ScrapData, []ParsedUrl, []ParsedUrl) {
