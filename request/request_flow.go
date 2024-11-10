@@ -156,9 +156,9 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 		wg429.Wait()
 	}
 
-	misc.CreateRequest(&requestData)
+	CreateRequest(&requestData)
 	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (misc.EOF().MatchString(requestData.Error.Error()) || misc.Timeout().MatchString(requestData.Error.Error()))) {
-		misc.PrintUrl(requestData, false)
+		PrintUrl(requestData, false)
 		slowDown(&check429)
 		work(check429, requestData, requestDataChan)
 		return
