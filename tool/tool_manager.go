@@ -5,7 +5,6 @@ import (
 )
 
 type ToolData struct {
-	Tool      Tool
 	FlagSet   *flag.FlagSet
 	FlagDatas []FlagData
 	// Sections    []Section
@@ -22,19 +21,12 @@ type UtilData struct {
 	Examples  map[string]string
 }
 
-// Tool represents a type of tool with a name and a description
-type Tool struct {
-	Name        string
-	Description string
-	Examples    map[string]string
-}
-
 // ToolRegistry holds all the tools registered in the system
-var ToolRegistry = make(map[string]Tool)
+var ToolRegistry = make(map[string]ToolData)
 
 // RegisterTool registers a new tool dynamically
-func RegisterTool(name, description string, examples map[string]string) Tool {
-	tool := Tool{
+func RegisterTool(name, description string, examples map[string]string) ToolData {
+	tool := ToolData{
 		Name:        name,
 		Description: description,
 		Examples:    examples,
@@ -46,18 +38,18 @@ func RegisterTool(name, description string, examples map[string]string) Tool {
 }
 
 // GetTool returns a tool based on its name from the registry
-func GetTool(toolName string) Tool {
+func GetTool(toolName string) ToolData {
 	tool, exists := ToolRegistry[toolName]
 	if !exists {
 		// If the tool doesn't exist, return a default error tool
-		return Tool{Name: "error", Description: "Tool not found"}
+		return ToolData{Name: "error"}
 	}
 	return tool
 }
 
 // GetTools returns a list of all tools in the registry
-func GetTools() []Tool {
-	var tools []Tool
+func GetTools() []ToolData {
+	var tools []ToolData
 	for _, tool := range ToolRegistry {
 		tools = append(tools, tool)
 	}

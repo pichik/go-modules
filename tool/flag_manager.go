@@ -35,10 +35,10 @@ func (i *ArrayStringFlag) Set(value string) error {
 	return nil
 }
 
-func CreateFlagSet(t Tool) *ToolData {
+func CreateFlagSet(t ToolData) *ToolData {
 	s := t.Description
 	flagSet := flag.NewFlagSet(s, flag.ExitOnError)
-	toolData = &ToolData{Tool: t, FlagSet: flagSet}
+	toolData = &ToolData{FlagSet: flagSet}
 	return toolData
 }
 
