@@ -1,3 +1,5 @@
+github.com/pichik/go-modules v1.2.6 h1:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
+github.com/pichik/go-modules v1.2.6/go.mod h1:Si7nWUXjvwEZ7rt0eW5iUxPNztd88PehSjN4H1YV1UQ=
 github.com/pichik/go-modules/misc v0.0.0-20241110181524-fc956641fab0 h1:nhvwxA9mF6xmA/aGQ2F91AiEji3ZDCwbZYY1U/2waK4=
 github.com/pichik/go-modules/misc v0.0.0-20241110181524-fc956641fab0/go.mod h1:6j9N74TpWY91Ck2gS2hSgmAlh0u+egHQjyL/JD0jZSQ=
 github.com/pichik/go-modules/tool v0.0.0-20241110182121-29c4532e4332 h1:RMVH8/d6LhwXumgt5XAyZXUirM+RuMtSzYkmEWavgec=
