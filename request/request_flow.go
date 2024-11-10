@@ -23,7 +23,7 @@ var progressMax int
 
 var slowed bool
 
-func (util misc.RequestFlow) SetupFlags() []tool.UtilData {
+func (util RequestFlow) SetupFlags() []tool.UtilData {
 	var flags []tool.FlagData
 
 	flags = append(flags,
