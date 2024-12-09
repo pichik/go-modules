@@ -1,0 +1,9 @@
+go 1.23.2
+
+use (
+	/home/pichik/scripts/go-modules/misc
+	/home/pichik/scripts/go-modules/tool
+	/home/pichik/scripts/go-modules/request
+	/home/pichik/scripts/go-modules/wayback
+	/home/pichik/scripts/go-modules/parser
+)
