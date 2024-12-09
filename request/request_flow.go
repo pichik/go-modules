@@ -7,12 +7,20 @@ import (
 	"time"
 
 	"github.com/pichik/go-modules/misc"
+	"github.com/pichik/go-modules/parser"
 	"github.com/pichik/go-modules/tool"
 )
 
+type RequestFlow struct {
+	UtilData *tool.UtilData
+}
+type IFlowTool interface {
+	Results(requestData misc.RequestData, m *sync.Mutex)
+}
+
 var outputDirFlag string
 var corsCheckFlag, ignoreTestedFlag bool
-var threadsFlag int
+var ThreadsFlag int
 
 var sleepTime = int(10)
 var currentThreads int
@@ -23,6 +31,8 @@ var progressMax int
 
 var slowed bool
 
+var saveResults bool
+
 func (util RequestFlow) SetupFlags() []tool.UtilData {
 	var flags []tool.FlagData
 
@@ -32,12 +42,12 @@ func (util RequestFlow) SetupFlags() []tool.UtilData {
 			Description: "Threads - requests per second, negative number increase second delay instead of threads (-t -5 :one thread per 5 second)",
 			Required:    false,
 			Def:         5,
-			VarInt:      &threadsFlag,
+			VarInt:      &ThreadsFlag,
 		})
 	flags = append(flags,
 		tool.FlagData{
 			Name:        "i",
-			Description: "Ignore already tested endpoints and clear queue file",
+			Description: "Ignore queue and tested urls",
 			Required:    false,
 			Def:         false,
 			VarBool:     &ignoreTestedFlag,
@@ -61,25 +71,28 @@ func (util RequestFlow) SetupFlags() []tool.UtilData {
 }
 
 func (util RequestFlow) SetupData() {
-	var ut []IUtil
+	var ut []tool.IUtil
 	ut = append(ut, Request{})
 	ut = append(ut, Repeater{})
 	for _, u := range ut {
 		u.SetupData()
 	}
-	//Separate previous found data from current
-	misc.DataSeparator()
+
+	if ignoreTestedFlag {
+		misc.RemoveQueueFile()
+	}
 }
 
 // check what is tested and add rest to queue (dont add it to the tested file)
 func SetupQueue(parsedUrls []misc.ParsedUrl, urlSpec string) {
-	parsedUrls = FilterUrls(parsedUrls)
+	parsedUrls = parser.FilterUrls(parsedUrls)
 	urls := misc.BuildUrls(parsedUrls, urlSpec)
 	misc.FillQueue(urls, ignoreTestedFlag)
 }
 
 // Simple flow with urls only
-func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool) {
+func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool, save bool) {
+	saveResults = save
 	var wg sync.WaitGroup
 	in := throughInfinite(&wg, iTool)
 
@@ -99,7 +112,8 @@ func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool) {
 }
 
 // Flow with customable request data, headers etc..
-func CustomFlowStart(requestData []misc.RequestData, iTool IFlowTool) {
+func CustomFlowStart(requestData []misc.RequestData, iTool IFlowTool, save bool) {
+	saveResults = save
 	var wg sync.WaitGroup
 	in := throughInfinite(&wg, iTool)
 	flow(requestData, in)
@@ -110,12 +124,12 @@ func CustomFlowStart(requestData []misc.RequestData, iTool IFlowTool) {
 func flow(requestData []misc.RequestData, requestDataChan chan<- interface{}) {
 	SetSartTime()
 
-	currentThreads = threadsFlag
+	currentThreads = ThreadsFlag
 	setLimiter(currentThreads)
 
 	var wg sync.WaitGroup
 	var m sync.Mutex
-	progressCounter = 1
+	progressCounter = 0
 	Resulted = 0
 	progressMax = len(requestData) * (1 + Repeats())
 
@@ -157,7 +171,7 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 	}
 
 	CreateRequest(&requestData)
-	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && (misc.EOF().MatchString(requestData.Error.Error()) || misc.Timeout().MatchString(requestData.Error.Error()))) {
+	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && misc.RepeatRequestTriggers().MatchString(requestData.Error.Error())) {
 		PrintUrl(requestData, false)
 		slowDown(&check429)
 		work(check429, requestData, requestDataChan)
@@ -165,22 +179,21 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 	} else if slowed {
 		wg429.Done()
 		slowed = false
-		if threadsFlag > 1 {
-			threadsFlag = threadsFlag / 2
-		} else if threadsFlag == 1 {
-			threadsFlag = -1
-		} else if threadsFlag < 0 {
-			threadsFlag--
+		if ThreadsFlag > 1 {
+			ThreadsFlag = ThreadsFlag / 2
+		} else if ThreadsFlag == 1 {
+			ThreadsFlag = -1
+		} else if ThreadsFlag < 0 {
+			ThreadsFlag--
 		}
-		currentThreads = threadsFlag
+		currentThreads = ThreadsFlag
 		setLimiter(currentThreads)
-		fmt.Printf("Back in game, threads set to: %d\n", currentThreads)
 	}
 
-	PrintUrl(requestData, true)
+	progressCounter++
+	PrintUrl(requestData, saveResults)
 	PrintProgress(progressCounter, progressMax)
 	requestDataChan <- requestData
-	progressCounter++
 	//Send different method if allowed to see if 404 have some valid request methods
 	if requestData.Method == "GET" && Repeat(strconv.Itoa(requestData.ResponseStatus)) {
 		for _, method := range GetAllMethods() {
@@ -191,28 +204,17 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 	}
 }
 
-func FlowResults(requestData misc.RequestData, m *sync.Mutex) ([]misc.ScrapData, []misc.ParsedUrl) {
-	foundData, completeUrls, incompleteUrls := misc.GetData(requestData.ResponseBody, &requestData.ParsedUrl)
+// Find usage for this
+// Not yet used, as every tool use its own
+func FlowResults(requestData misc.RequestData, m *sync.Mutex) (map[string]parser.ParserData, []misc.ParsedUrl) {
+
+	foundData, completeUrls := parser.ParseText(requestData.ResponseBody, &requestData.ParsedUrl)
 
 	if requestData.ResponseHeaders.Get("Location") != "" {
-		data, comp, incomp := misc.GetData(requestData.ResponseHeaders.Get("Location"), &requestData.ParsedUrl)
-		foundData = append(foundData, data...)
+		data, comp := parser.ParseText(requestData.ResponseHeaders.Get("Location"), &requestData.ParsedUrl)
+		foundData = parser.MergeData(foundData, data)
 		completeUrls = append(completeUrls, comp...)
-		incompleteUrls = append(incompleteUrls, incomp...)
 	}
-	fmt.Println("FLOW RESULTSS")
-	urlToSave := requestData.ParsedUrl.Url
-	completeUrls = FilterUrls(completeUrls)
-	// m.Lock()
-	misc.AddToTested(urlToSave)
-	misc.DataOutput(foundData, misc.GetUrls(completeUrls), misc.GetUrls(incompleteUrls))
-	misc.CorsOutput(requestData.ResponseHeaders, urlToSave)
-
-	if requestData.ResponseStatus != 404 && requestData.ResponseStatus != 405 && requestData.ResponseContentLength != 0 {
-		misc.ResponseOutput(requestData)
-	}
-
-	// m.Unlock()
 
 	return foundData, completeUrls
 }
@@ -230,72 +232,7 @@ func slowDown(check429 *bool) {
 		*check429 = true
 		wg429.Add(1)
 		slowed = true
-		fmt.Printf("Too fast, waiting 30sec to repeat last url\n")
 		currentThreads = 1
-	} else if *check429 {
-		fmt.Printf("Too fast ---Waiting...30sec---\n")
 	}
 	time.Sleep(time.Duration(30) * time.Second)
-}
-
-// create channels that do not require exact number and can go through all urls
-func makeInfinite() (chan<- interface{}, <-chan interface{}) {
-	in := make(chan interface{})
-	out := make(chan interface{})
-
-	go func() {
-		var inQueue []interface{}
-		outCh := func() chan interface{} {
-			if len(inQueue) == 0 {
-				return nil
-			}
-			return out
-		}
-		curVal := func() interface{} {
-			if len(inQueue) == 0 {
-				return nil
-			}
-			return inQueue[0]
-		}
-
-		for len(inQueue) > 0 || in != nil {
-			select {
-			case v, ok := <-in:
-				if !ok {
-					in = nil
-				} else {
-					inQueue = append(inQueue, v)
-				}
-			case outCh() <- curVal():
-				inQueue = inQueue[1:]
-			}
-		}
-		close(out)
-	}()
-	return in, out
-}
-
-// go through all urls
-func throughInfinite(wg *sync.WaitGroup, iTool IFlowTool) chan<- interface{} {
-	var m sync.Mutex
-
-	in, out := makeInfinite()
-	wg.Add(1)
-
-	go func() {
-		for v := range out {
-			wg.Add(1)
-			localV := v
-			go func() {
-				requestData := localV.(misc.RequestData)
-				iTool.Results(requestData, &m)
-				Resulted++
-				PrintProgress(progressCounter, progressMax)
-				wg.Done()
-			}()
-		}
-		wg.Done()
-	}()
-
-	return in
 }

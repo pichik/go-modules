@@ -6,6 +6,10 @@ import (
 	"github.com/pichik/go-modules/tool"
 )
 
+type Repeater struct {
+	UtilData *tool.UtilData
+}
+
 var repeatsFlag string
 var methodsRepeat []string
 var statusRepeat []string

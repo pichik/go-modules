@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,7 +15,7 @@ var usedFiles = make(map[string]*os.File)
 var fileMutexes = make(map[string]*sync.Mutex)
 var fileMutexesLock sync.Mutex
 
-func OpenFile(directory string, fileName string) (*os.File, *sync.Mutex) {
+func openFile(directory string, fileName string, writeType int) (*os.File, *sync.Mutex) {
 	filePath := filepath.Join(directory, fileName)
 	fileMutex := getFileMutex(filePath)
 
@@ -25,14 +24,16 @@ func OpenFile(directory string, fileName string) (*os.File, *sync.Mutex) {
 	}
 
 	//Create directory
-	if err := os.MkdirAll(directory, os.ModePerm); err != nil {
-		log.Fatal(err)
+	if directory != "" {
+		if err := os.MkdirAll(directory, os.ModePerm); err != nil {
+			PrintError("Create dir", err)
+		}
 	}
 
 	//Create / Open file
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|writeType, 0644)
 	if err != nil {
-		log.Fatal(err)
+		PrintError("Open file", err)
 	}
 
 	usedFiles[filePath] = file
@@ -48,9 +49,12 @@ func CloseAllFiles() {
 // Used tomnomnom anew
 // Compare strings with file lines and return them if they are not already in.
 // True for writing them to file
-func Anew(endpoints []string, fileName string, directory string, add bool) []string {
+// Variadic parameter 'endpoints ...string' accept single string or slice (have to be used as last parameter)
+// With passing slice is required to use '...' Anew("file", "dir", true, newUrls...)
+func Anew(fileName string, directory string, add bool, endpoints ...string) []string {
+	fileName = strings.Replace(fileName, "/", "_", -1)
 
-	file, m := OpenFile(directory, fileName)
+	file, m := openFile(directory, fileName, os.O_APPEND)
 	m.Lock()
 	defer m.Unlock()
 
@@ -64,18 +68,21 @@ func Anew(endpoints []string, fileName string, directory string, add bool) []str
 		lines[sc.Text()] = true
 	}
 
-	writer := bufio.NewWriter(file)
-	defer writer.Flush()
+	// Create the writer once before the loop
+	var writer *bufio.Writer
+	if add {
+		writer = bufio.NewWriter(file)
+		defer writer.Flush()
+	}
 
 	// Check for duplicates and accumulate unique lines
 	for _, line := range endpoints {
-
 		if lines[line] {
 			continue
 		}
-		// add the line to the map so we don't get any duplicates from stdin
+		// Add the line to the map to avoid duplicates
 		lines[line] = true
-		//Append new lines to the file
+		// Append new lines to the file
 		if add {
 			writer.WriteString(line + "\n")
 		}
@@ -89,7 +96,7 @@ func Anew(endpoints []string, fileName string, directory string, add bool) []str
 func RemoveLine(line string, fileName string, directory string) {
 	filePath := filepath.Join(directory, fileName)
 
-	f, m := OpenFile(directory, fileName)
+	f, m := openFile(directory, fileName, os.O_TRUNC)
 	m.Lock()
 	defer m.Unlock()
 
@@ -104,28 +111,28 @@ func RemoveLine(line string, fileName string, directory string) {
 		if scanner.Text() != line {
 			_, err := buf.Write(scanner.Bytes())
 			if err != nil {
-				log.Fatal(err)
+				PrintError("File scanner", err)
 			}
 			_, err = buf.WriteString("\n")
 			if err != nil {
-				log.Fatal(err)
+				PrintError("File scanner", err)
 			}
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		PrintError("File scanner", err)
 	}
 
 	err := os.WriteFile(filePath, buf.Bytes(), 0666)
 	if err != nil {
-		log.Fatal(err)
+		PrintError("File scanner", err)
 	}
 
 }
 
 // Read file
 func Read(fileName string) ([]string, error) {
-	file, m := OpenFile("./", fileName)
+	file, m := openFile("./", fileName, 0)
 	m.Lock()
 	defer m.Unlock()
 
@@ -141,36 +148,45 @@ func Read(fileName string) ([]string, error) {
 	return lines, nil
 }
 
-// Append file
-func Write(text string, fileName string, directory string) {
-	f := strings.Replace(fileName, "/", "_", -1)
-
-	file, m := OpenFile(directory, f)
-	m.Lock()
-	defer m.Unlock()
-
-	file.WriteString(text + "\n")
-}
-
 // Append slice to a file
-func WriteAll(text []string, fileName string, directory string) {
+func Append(fileName string, directory string, text ...string) {
 	if len(text) == 0 {
 		return
 	}
 
 	f := strings.Replace(fileName, "/", "_", -1)
 
-	file, m := OpenFile(directory, f)
+	file, m := openFile(directory, f, os.O_APPEND)
 	m.Lock()
 	defer m.Unlock()
 
-	file.WriteString(strings.Join(text, "\n") + "\n")
+	for _, line := range text {
+		file.WriteString(line + "\n")
+	}
+}
+
+// Ovewrite entire file
+func Overwrite(fileName string, directory string, text ...string) {
+	if len(text) == 0 {
+		return
+	}
+
+	f := strings.Replace(fileName, "/", "_", -1)
+
+	file, m := openFile(directory, f, os.O_TRUNC)
+	m.Lock()
+	defer m.Unlock()
+
+	for _, line := range text {
+		file.WriteString(line + "\n")
+	}
 }
 
 func RemoveFile(file string) {
 	os.Remove(file)
 }
 
+// Each file have its own mutex
 func getFileMutex(filePath string) *sync.Mutex {
 	fileMutexesLock.Lock()
 	defer fileMutexesLock.Unlock()

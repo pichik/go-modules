@@ -1,7 +1,6 @@
 package misc
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -17,42 +16,26 @@ type API struct {
 	Actions []string
 }
 
-var FilterData []Filters
-
-type Filters struct {
-	Name        string
-	RegexString string
-	RegexPart   int
-	Highlight   string
-}
-
 var EndpointData = make(map[string][]string)
 
 var Bypasses []string
 
 var wordlistUrl = string("raw.githubusercontent.com/pichik/wordlists/main/")
 
-func LoadFilters() {
-	js, _ := loadWordlist("filters.json")
-	err := json.Unmarshal(js, &FilterData)
-
-	errorCheck("filters", err)
-}
-
 func LoadApis() {
-	_, ApiData.Actions = loadWordlist("apis/actions.txt")
-	_, ApiData.Objects = loadWordlist("apis/objects.txt")
+	_, ApiData.Actions = LoadGithubWordlist("apis/actions.txt")
+	_, ApiData.Objects = LoadGithubWordlist("apis/objects.txt")
 }
 
 func LoadBypasses() {
-	_, Bypasses = loadWordlist("bypasses.txt")
+	_, Bypasses = LoadGithubWordlist("bypasses.txt")
 }
 
 func LoadEndpoints(tag string) {
-	_, EndpointData[tag] = loadWordlist(fmt.Sprintf("endpoints/%s.txt", tag))
+	_, EndpointData[tag] = LoadGithubWordlist(fmt.Sprintf("endpoints/%s.txt", tag))
 }
 
-func loadWordlist(file string) ([]byte, []string) {
+func LoadGithubWordlist(file string) ([]byte, []string) {
 	url := fmt.Sprintf("https://%s%s", wordlistUrl, file)
 	res, err := http.Get(url)
 

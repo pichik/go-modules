@@ -17,7 +17,6 @@ const resultsFile = "results"
 
 const allFile = ".all"
 const completeUrlsFile = "complete-urls"
-const incompleteUrlsFile = "incomplete-urls"
 
 var toolDir = string("unknown/")
 
@@ -28,54 +27,21 @@ func SetToolDir(dir string) {
 func DataSeparator() {
 	//Separate previous found data from current
 	layout := fmt.Sprintf("-----------------------------------------%s", time.Now().Format("[02.01.2006][15:04:05]"))
-	Write(layout, incompleteUrlsFile, UrlDir)
-	Write(layout, completeUrlsFile, UrlDir)
+	Append(completeUrlsFile, UrlDir, layout)
 	for _, d := range DataScrapRegex() {
 		if d.Name != "urls" {
-			Write(layout, d.Name, DataDir)
+			Append(d.Name, DataDir, layout)
 		}
 	}
 }
 
-func DataOutput(foundData []ScrapData, completeUrls []string, incompleteUrls []string) {
+func DataOutput(name string, foundData []string, completeUrls []string) {
 	var new []string
-	if toolDir == "crawler/" {
 
-		// var urls []string
+	Anew(completeUrlsFile, UrlDir, true, completeUrls...)
 
-		for _, d := range foundData {
-
-			if d.Name != "urls" {
-				new = Anew(d.Results, allFile, DataDir, true)
-				WriteAll(new, d.Name, DataDir)
-			}
-			//  else {
-			// 	urls = append(urls, d.Results...)
-
-			// }
-		}
-
-		// Unique(&urls)
-		// Anew(urls, allFile, UrlDir, true)
-
-		Anew(incompleteUrls, incompleteUrlsFile, UrlDir, true)
-		Anew(completeUrls, completeUrlsFile, UrlDir, true)
-	} else {
-
-		for _, d := range foundData {
-			if d.Name != "urls" {
-				new = Anew(d.Results, allFile, DataDir, false)
-				WriteAll(new, d.Name, DataDir+toolDir)
-			} else {
-				new = Anew(d.Results, allFile, UrlDir, false)
-				WriteAll(new, allFile, UrlDir+toolDir)
-			}
-		}
-		new = Anew(incompleteUrls, incompleteUrlsFile, UrlDir, false)
-		WriteAll(new, incompleteUrlsFile, UrlDir+toolDir)
-		new = Anew(completeUrls, completeUrlsFile, UrlDir, false)
-		WriteAll(new, completeUrlsFile, UrlDir+toolDir)
-	}
+	new = Anew(allFile, DataDir, true, foundData...)
+	Append(name, DataDir, new...)
 
 }
 
@@ -85,31 +51,30 @@ func CorsOutput(responseHeaders http.Header, currentUrl string) {
 
 	if allowOrigin != "" && allowCreds != "" {
 		text := fmt.Sprintf("\033[32m%s\n\t\033[33mAccess-Control-Allow-Origin: \t\t%s\n\tAccess-Control-Allow-Credentials:\t%s\n\033[0m", currentUrl, allowOrigin, allowCreds)
-		Write(text, "cors", DataDir)
+		Append("cors", "", text)
 	}
 }
 
 func ResponseOutput(requestData RequestData) {
 
-	dir := ResponseDir + toolDir
+	dirname := ResponseDir + toolDir
+	filename := BuildUrl(requestData.ParsedUrl, "23")
 
 	queries, _ := json.MarshalIndent(requestData.ParsedUrl.Queries, "", "\t")
 	headers, _ := json.MarshalIndent(requestData.Headers, "", "\t")
 
-	Write(fmt.Sprintf("\033[33m%7s-----------------------------------------------------------------------------------------", ""), BuildUrl(requestData.ParsedUrl, "23"), dir)
-	Write(fmt.Sprintf("%7s: %s\n%7s: %d\n%7s: %s\n%7s: %s\n%7s: %s", "Method", requestData.Method, "Status", requestData.ResponseStatus, "Query", string(queries), "Headers", string(headers), "Body", requestData.RequestBody), BuildUrl(requestData.ParsedUrl, "23"), dir)
-	Write(fmt.Sprintf("%7s-----------------------------------------------------------------------------------------\033[0m", ""), BuildUrl(requestData.ParsedUrl, "23"), dir)
-	Write(requestData.ResponseBody, BuildUrl(requestData.ParsedUrl, "23"), dir)
+	Append(filename, dirname, fmt.Sprintf("\033[33m%7s-----------------------------------------------------------------------------------------", ""))
+	Append(filename, dirname, fmt.Sprintf("%7s: %s\n%7s: %d\n%7s: %s\n%7s: %s\n%7s: %s", "Method", requestData.Method, "Status", requestData.ResponseStatus, "Query", string(queries), "Headers", string(headers), "Body", requestData.RequestBody))
+	Append(filename, dirname, fmt.Sprintf("%7s-----------------------------------------------------------------------------------------\033[0m", ""))
+	Append(filename, dirname, requestData.ResponseBody)
 }
 
-func ResultOutput(extension string, formattedOutput string) {
-	if ExtensionPass(extension) {
-		Write(formattedOutput, resultsFile, toolDir)
-	}
+func ResultOutput(formattedOutput string) {
+	Append(resultsFile, toolDir, formattedOutput)
 }
 
 func AddToTested(url string) {
-	Write(url, testedFile, toolDir)
+	Anew(testedFile, toolDir, true, url)
 	RemoveLine(url, queueFile, toolDir)
 }
 
@@ -119,18 +84,21 @@ func FillQueue(urls []string, ignoreTested bool) {
 
 	if ignoreTested {
 		urlsToTest = urls
-		RemoveFile(toolDir + queueFile)
 	} else {
-		urlsToTest = Anew(urls, testedFile, toolDir, false)
+		urlsToTest = Anew(testedFile, toolDir, false, urls...)
 	}
-	Anew(urlsToTest, queueFile, toolDir, true)
+	Anew(queueFile, toolDir, true, urlsToTest...)
+}
+
+func RemoveQueueFile() {
+	RemoveFile(toolDir + queueFile)
 }
 
 func CustomOutput(text string, filename string) {
-	Write(text, filename, toolDir)
+	Append(filename, toolDir, text)
 }
 func CustomOutputs(text []string, filename string) {
-	Anew(text, filename, toolDir, true)
+	Anew(filename, toolDir, true, text...)
 }
 
 func ReadQueue() []string {

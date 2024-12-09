@@ -69,3 +69,7 @@ func PrintDebug(text any) {
 	fmt.Fprintf(os.Stderr, "%s\n", text)
 
 }
+
+func PrintError(text any, err error) {
+	fmt.Printf("\nError: %s: %s\n", text, err.Error())
+}

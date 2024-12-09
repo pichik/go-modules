@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pichik/go-modules/misc"
@@ -14,6 +15,7 @@ func PrintUrl(requestData misc.RequestData, save bool) {
 
 	switch requestData.ResponseStatus {
 	case 0:
+		redirect = printError(requestData.Error.Error())
 		color = misc.Gray
 	case 200, 204:
 		color = misc.Green
@@ -37,7 +39,10 @@ func PrintUrl(requestData misc.RequestData, save bool) {
 	formattedOutput := fmt.Sprintf("\r%s%9s [%.3d] %23s [ %s ] %s%s", color, method, requestData.ResponseStatus, contentType, misc.BuildUrl(requestData.ParsedUrl, "1234"), redirect, misc.White)
 
 	fmt.Printf("%s\n", formattedOutput)
-	// ResultOutput(requestData, formattedOutput)
+
+	if save {
+		misc.ResultOutput(formattedOutput)
+	}
 }
 
 var startTime time.Time
@@ -55,9 +60,18 @@ func PrintProgress(curr int, max int) {
 			estimatedTime = max / persec
 		}
 	}
-	fmt.Fprintf(os.Stderr, "%sProgress: [(%d/%d)/%d | %s/%s]", "\r", Resulted, curr, max, misc.ReadableTime(seconds), misc.ReadableTime(estimatedTime))
+	fmt.Fprintf(os.Stderr, "%sProgress: [(%d/%d)/%d | %s/%s] [%d r/s]", "\r", Resulted, curr, max, misc.ReadableTime(seconds), misc.ReadableTime(estimatedTime), currentThreads)
 }
 
 func SetSartTime() {
 	startTime = time.Now()
+}
+
+func printError(err string) string {
+	// Split by colon and get the last part
+	parts := strings.Split(err, ":")
+	if len(parts) > 0 {
+		return strings.TrimSpace(parts[len(parts)-1])
+	}
+	return err
 }

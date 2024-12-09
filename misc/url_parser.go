@@ -35,6 +35,7 @@ func ParseUrl(u string) ParsedUrl {
 	if err != nil {
 		parsedUrl.Error = err
 		parsedUrl.Url = u
+
 		return parsedUrl
 	}
 
@@ -172,9 +173,11 @@ func RebuildUrl(parsedUrl *ParsedUrl) {
 
 	}
 
-	if parsedUrl.QueryString != "" {
+	if len(parsedUrl.Queries) > 0 {
+		parsedUrl.QueryString = parsedUrl.Queries.Encode()
 		parsedUrl.Url = parsedUrl.Url + "?" + parsedUrl.QueryString
 	}
+
 	if parsedUrl.Fragments != "" {
 		parsedUrl.Url = parsedUrl.Url + "#" + parsedUrl.Fragments
 	}

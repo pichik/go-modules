@@ -4,6 +4,16 @@ import (
 	"flag"
 )
 
+type IUtil interface {
+	SetupFlags() []UtilData
+	SetupData()
+}
+
+type ITool interface {
+	SetupFlags()
+	SetupInput(urls []string)
+}
+
 type ToolData struct {
 	FlagSet   *flag.FlagSet
 	FlagDatas []FlagData

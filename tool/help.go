@@ -12,7 +12,9 @@ func PrintLogo() {
 }
 
 func PrintToolName(name string) {
-	fmt.Printf("%s%s%s\n", misc.Red, name, misc.White)
+	if name != "" {
+		fmt.Printf("%s%s%s\n", misc.Red, name, misc.White)
+	}
 }
 
 func PrintDefaultHelp() {
@@ -30,9 +32,9 @@ func PrintDefaultHelp() {
 
    %sExamples:%s
 	 Read from file:
-	   %scat urls.txt | thetool [tool] [-h]%s
+	   %scat urls.txt | tool [tool] [-h]%s
 	 Make request from string:
-	   %secho 'google.com' | thetool [tool] [-h]%s
+	   %secho 'google.com' | tool [tool] [-h]%s
   `, misc.Yellow, misc.White, tools, misc.Yellow, misc.White, misc.Blue, misc.White, misc.Blue, misc.White)
 	os.Exit(0)
 }

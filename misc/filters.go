@@ -1,14 +1,15 @@
 package misc
 
 import (
-	"fmt"
 	"regexp"
 )
 
 var extensions *regexp.Regexp
 
-var eof *regexp.Regexp
-var timeout *regexp.Regexp
+// var eof *regexp.Regexp
+// var timeout *regexp.Regexp
+// var refused *regexp.Regexp
+var repeatRequestTriggers *regexp.Regexp
 
 var scrapData []ScrapData
 
@@ -21,11 +22,18 @@ type ScrapData struct {
 	Highlight   string
 }
 
-func EOF() *regexp.Regexp {
-	return eof
-}
-func Timeout() *regexp.Regexp {
-	return timeout
+// func EOF() *regexp.Regexp {
+// 	return eof
+// }
+// func Timeout() *regexp.Regexp {
+// 	return timeout
+// }
+// func Refused() *regexp.Regexp {
+// 	return refused
+// }
+
+func RepeatRequestTriggers() *regexp.Regexp {
+	return repeatRequestTriggers
 }
 
 func DataScrapRegex() []ScrapData {
@@ -35,20 +43,23 @@ func DataScrapRegex() []ScrapData {
 func CompileFilters() {
 	extensions = regexp.MustCompile(`(jpe?g|png|svg|css|gif|ico|woff2?|ttf)`)
 
-	eof = regexp.MustCompile(`EOF$`)
-	timeout = regexp.MustCompile(`.*dial tcp.*i/o timeout$`)
+	// eof = regexp.MustCompile(`EOF$`)
+	// timeout = regexp.MustCompile(`.*dial tcp.*i/o timeout$`)
+	// refused = regexp.MustCompile(`connect: connection refused$`)
 
-	LoadFilters()
+	repeatRequestTriggers = regexp.MustCompile(`(context deadline exceeded|EOF|dial tcp.*i/o timeout|connection refused)$`)
 
-	for _, filter := range FilterData {
-		var sd ScrapData
-		sd.Name = filter.Name
-		sd.Highlight = filter.Highlight
-		sd.RegexPart = filter.RegexPart
-		sd.Regex = regexp.MustCompile(fmt.Sprintf(`%s`, filter.RegexString))
-		sd.RegexString = filter.RegexString
-		scrapData = append(scrapData, sd)
-	}
+	// LoadFilters()
+
+	// for _, filter := range FilterData {
+	// 	var sd ScrapData
+	// 	sd.Name = filter.Name
+	// 	sd.Highlight = filter.Highlight
+	// 	sd.RegexPart = filter.RegexPart
+	// 	sd.Regex = regexp.MustCompile(fmt.Sprintf(`%s`, filter.RegexString))
+	// 	sd.RegexString = filter.RegexString
+	// 	scrapData = append(scrapData, sd)
+	// }
 
 }
 
