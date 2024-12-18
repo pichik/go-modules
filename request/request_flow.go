@@ -8,6 +8,7 @@ import (
 
 	"github.com/pichik/go-modules/misc"
 	"github.com/pichik/go-modules/parser"
+	"github.com/pichik/go-modules/request/data"
 	"github.com/pichik/go-modules/tool"
 )
 
@@ -23,11 +24,10 @@ var corsCheckFlag, ignoreTestedFlag bool
 var ThreadsFlag int
 
 var sleepTime = int(10)
-var currentThreads int
 var limiter <-chan time.Time
 
-var progressCounter int
-var progressMax int
+// var progressCounter int
+// var progressMax int
 
 var slowed bool
 
@@ -64,6 +64,7 @@ func (util RequestFlow) SetupFlags() []tool.UtilData {
 	util.UtilData.FlagDatas = flags
 	var ut []tool.UtilData
 	ut = append(ut, Request{UtilData: &tool.UtilData{}}.SetupFlags()...)
+	ut = append(ut, parser.Parser{UtilData: &tool.UtilData{}}.SetupFlags()...)
 	ut = append(ut, Repeater{UtilData: &tool.UtilData{}}.SetupFlags()...)
 	ut = append(ut, *util.UtilData)
 
@@ -73,6 +74,7 @@ func (util RequestFlow) SetupFlags() []tool.UtilData {
 func (util RequestFlow) SetupData() {
 	var ut []tool.IUtil
 	ut = append(ut, Request{})
+	ut = append(ut, parser.Parser{})
 	ut = append(ut, Repeater{})
 	for _, u := range ut {
 		u.SetupData()
@@ -91,10 +93,13 @@ func SetupQueue(parsedUrls []misc.ParsedUrl, urlSpec string) {
 }
 
 // Simple flow with urls only
-func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool, save bool) {
-	saveResults = save
+func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool, saveRes bool) {
+	saveResults = saveRes
 	var wg sync.WaitGroup
-	in := throughInfinite(&wg, iTool)
+	// in := throughInfinite(&wg, iTool)
+	in := data.ThroughInfinite(&wg, func(requestData misc.RequestData, m *sync.Mutex) {
+		iTool.Results(requestData, m) // Use your tool here
+	})
 
 	var requestData = make([]misc.RequestData, len(urls))
 	for i, u := range urls {
@@ -115,23 +120,26 @@ func FlowStart(urls []misc.ParsedUrl, iTool IFlowTool, save bool) {
 func CustomFlowStart(requestData []misc.RequestData, iTool IFlowTool, save bool) {
 	saveResults = save
 	var wg sync.WaitGroup
-	in := throughInfinite(&wg, iTool)
+	// in := throughInfinite(&wg, iTool)
+	in := data.ThroughInfinite(&wg, func(requestData misc.RequestData, m *sync.Mutex) {
+		iTool.Results(requestData, m) // Use your tool here
+	})
 	flow(requestData, in)
 	close(in)
 	wg.Wait()
 }
 
 func flow(requestData []misc.RequestData, requestDataChan chan<- interface{}) {
-	SetSartTime()
+	data.SetSartTime()
 
-	currentThreads = ThreadsFlag
-	setLimiter(currentThreads)
+	data.CurrentThreads = ThreadsFlag
+	setLimiter(data.CurrentThreads)
 
 	var wg sync.WaitGroup
 	var m sync.Mutex
-	progressCounter = 0
-	Resulted = 0
-	progressMax = len(requestData) * (1 + Repeats())
+	data.ProgressCounter = 0
+	data.Resulted = 0
+	data.ProgressMax = len(requestData) * (1 + Repeats())
 
 	queue := make(chan misc.RequestData, 15)
 
@@ -143,10 +151,10 @@ func flow(requestData []misc.RequestData, requestDataChan chan<- interface{}) {
 				<-limiter
 
 				//Wait for responses to be resulted, so there is no many unresulted requests
-				diff := progressCounter - Resulted
+				diff := data.ProgressCounter - data.Resulted
 				for diff > 20 {
 					time.Sleep(time.Second) // Give up the CPU temporarily
-					diff = progressCounter - Resulted
+					diff = data.ProgressCounter - data.Resulted
 				}
 
 				work(false, requestData, requestDataChan)
@@ -172,7 +180,7 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 
 	CreateRequest(&requestData)
 	if requestData.ResponseStatus == 429 || (requestData.ResponseStatus == 000 && misc.RepeatRequestTriggers().MatchString(requestData.Error.Error())) {
-		PrintUrl(requestData, false)
+		data.PrintUrl(requestData, false)
 		slowDown(&check429)
 		work(check429, requestData, requestDataChan)
 		return
@@ -186,13 +194,13 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 		} else if ThreadsFlag < 0 {
 			ThreadsFlag--
 		}
-		currentThreads = ThreadsFlag
-		setLimiter(currentThreads)
+		data.CurrentThreads = ThreadsFlag
+		setLimiter(data.CurrentThreads)
 	}
 
-	progressCounter++
-	PrintUrl(requestData, saveResults)
-	PrintProgress(progressCounter, progressMax)
+	data.ProgressCounter++
+	data.PrintUrl(requestData, saveResults)
+	data.PrintProgress()
 	requestDataChan <- requestData
 	//Send different method if allowed to see if 404 have some valid request methods
 	if requestData.Method == "GET" && Repeat(strconv.Itoa(requestData.ResponseStatus)) {
@@ -204,8 +212,6 @@ func work(check429 bool, requestData misc.RequestData, requestDataChan chan<- in
 	}
 }
 
-// Find usage for this
-// Not yet used, as every tool use its own
 func FlowResults(requestData misc.RequestData, m *sync.Mutex) (map[string]parser.ParserData, []misc.ParsedUrl) {
 
 	foundData, completeUrls := parser.ParseText(requestData.ResponseBody, &requestData.ParsedUrl)
@@ -232,7 +238,7 @@ func slowDown(check429 *bool) {
 		*check429 = true
 		wg429.Add(1)
 		slowed = true
-		currentThreads = 1
+		data.CurrentThreads = 1
 	}
 	time.Sleep(time.Duration(30) * time.Second)
 }

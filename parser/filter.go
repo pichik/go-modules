@@ -35,7 +35,7 @@ func (util Filter) SetupFlags() []tool.UtilData {
 		})
 
 	examples := make(map[string]string)
-	examples["Set domain scope"] = "echo 'google.com' | tt [tool] -S '(admin|support)\\.google.com'"
+	examples["Set domain scope"] = "echo 'google.com' | tt [tool] -S '^(admin|support)\\.google.com'"
 	examples["Set unwanted endpoit filtering"] = "echo 'google.com' | tt [tool] -F '/(products|blog)/'"
 
 	util.UtilData.Name = "Filters"
@@ -68,5 +68,5 @@ func urlFilterPass(parsedUrl misc.ParsedUrl) bool {
 	if filterRegex != nil && filterRegex.MatchString(parsedUrl.Path) {
 		return false
 	}
-	return misc.ExtensionPass(parsedUrl.Extension)
+	return misc.ExtensionPass(parsedUrl.Protocol, parsedUrl.Extension)
 }

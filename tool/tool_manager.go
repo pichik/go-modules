@@ -33,6 +33,7 @@ type UtilData struct {
 
 // ToolRegistry holds all the tools registered in the system
 var ToolRegistry = make(map[string]ToolData)
+var toolOrder []string
 
 // RegisterTool registers a new tool dynamically
 func RegisterTool(name, description string, examples map[string]string) ToolData {
@@ -44,6 +45,7 @@ func RegisterTool(name, description string, examples map[string]string) ToolData
 
 	// Register the tool by adding it to the global registry
 	ToolRegistry[name] = tool
+	toolOrder = append(toolOrder, name)
 	return tool
 }
 
@@ -58,10 +60,10 @@ func GetTool(toolName string) ToolData {
 }
 
 // GetTools returns a list of all tools in the registry
-func GetTools() []ToolData {
-	var tools []ToolData
-	for _, tool := range ToolRegistry {
-		tools = append(tools, tool)
-	}
-	return tools
-}
+// func GetTools() []ToolData {
+// 	var tools []ToolData
+// 	for _, tool := range ToolRegistry {
+// 		tools = append(tools, tool)
+// 	}
+// 	return tools
+// }

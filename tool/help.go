@@ -11,7 +11,7 @@ func PrintLogo() {
 	fmt.Printf("%s%s%s\n", misc.Purple, logo(), misc.White)
 }
 
-func PrintToolName(name string) {
+func printToolName(name string) {
 	if name != "" {
 		fmt.Printf("%s%s%s\n", misc.Red, name, misc.White)
 	}
@@ -20,11 +20,13 @@ func PrintToolName(name string) {
 func PrintDefaultHelp() {
 	var tools string
 
-	for _, t := range GetTools() {
-		if t.Name == "error" {
+	PrintLogo()
+
+	for _, t := range toolOrder {
+		if t == "error" {
 			continue
 		}
-		tools = tools + fmt.Sprintf("\n\t%s\t\t- %s", t.Name, t.Description)
+		tools = tools + fmt.Sprintf("\n\t%s\t\t- %s", ToolRegistry[t].Name, ToolRegistry[t].Description)
 	}
 
 	fmt.Printf(`
@@ -34,7 +36,7 @@ func PrintDefaultHelp() {
 	 Read from file:
 	   %scat urls.txt | tool [tool] [-h]%s
 	 Make request from string:
-	   %secho 'google.com' | tool [tool] [-h]%s
+	   %secho 'https://google.com' | tool [tool] [-h]%s
   `, misc.Yellow, misc.White, tools, misc.Yellow, misc.White, misc.Blue, misc.White, misc.Blue, misc.White)
 	os.Exit(0)
 }

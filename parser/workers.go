@@ -9,11 +9,11 @@ func jsobSelector(k string, v *ParserData, text string, currentUrl *misc.ParsedU
 
 	switch k {
 	case "urls":
-		if IncludeUrlsFlag {
+		if includeUrls {
 			*parsedUrls = append(*parsedUrls, findUrls(text, v, currentUrl)...)
 		}
 	default:
-		if includeGithubDataFlag {
+		if includeGithubData {
 			getData(text, v)
 		}
 	}

@@ -13,9 +13,9 @@ var timestampUrlBase = "https://web.archive.org/web/"
 var archiveUrlBase = "https://web.archive.org/cdx/search/cdx?output=json"
 
 var timestampRegex = regexp.MustCompile(`/web/(\d{14})if_/`)
-var httpRegex = regexp.MustCompile(`if_/(http.*)`)
+var dewebRegex = regexp.MustCompile(`.*/web/[0-9]{14}([a-z]{2}_)?/`)
 
-func BuildUrls(urls *[]string) {
+func BuildArchiveUrls(urls *[]string) {
 	archiveUrlBase = fmt.Sprintf("%s&pageSize=%s&filter=%s&from=%s&fl=%s&collapse=%s&page=0", archiveUrlBase, pageSizeFlag, FilterFlag, fromFlag, ShowDataFlag, SkipByFlag)
 
 	for i, url := range *urls {
@@ -34,11 +34,24 @@ func BuildTimestampUrls(wb []WB) []string {
 	return tsUrls
 }
 
-func RemoveArchiveUrl(archiveUrl misc.ParsedUrl) (string, misc.ParsedUrl) {
+func GetTimestampAndUrl(archiveUrl misc.ParsedUrl) (string, misc.ParsedUrl) {
 	archiveEndpoint := misc.BuildUrl(archiveUrl, "3")
 	timestamp := timestampRegex.FindStringSubmatch(archiveEndpoint)[1]
-	url := httpRegex.FindStringSubmatch(archiveEndpoint)[1]
+	url := DewebUrls(archiveEndpoint)[0]
 	return timestamp, misc.ParseUrl(url)
+}
+
+func DewebUrls(urls ...string) []string {
+	var dewebed []string
+
+	for _, url := range urls {
+
+		dwb := dewebRegex.ReplaceAllString(url, "")
+		if !strings.Contains(dwb, "web.archive.org") {
+			dewebed = append(dewebed, dewebRegex.ReplaceAllString(url, ""))
+		}
+	}
+	return dewebed
 }
 
 func getRawUrls(wbs []WB) []string {
@@ -46,9 +59,9 @@ func getRawUrls(wbs []WB) []string {
 
 	for _, wb := range wbs {
 		url := strings.TrimSuffix(wb.Original, "/")
-		if misc.ExtensionPass(url) {
+		purl := misc.ParseUrl(url)
+		if misc.ExtensionPass(purl.Protocol, purl.Extension) {
 			//Parse url to remove :80 protocols to be appended
-			purl := misc.ParseUrl(url)
 			purl.Protocol = "https"
 			misc.RebuildUrl(&purl)
 			rawUrls = append(rawUrls, purl.Url)

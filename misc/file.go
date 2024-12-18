@@ -3,7 +3,10 @@ package misc
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
+	"fmt"
 	"io"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +19,15 @@ var fileMutexes = make(map[string]*sync.Mutex)
 var fileMutexesLock sync.Mutex
 
 func openFile(directory string, fileName string, writeType int) (*os.File, *sync.Mutex) {
+
+	//Check directory and file name length to prevent errors
+	if len(directory) > 250 {
+		directory = fmt.Sprintf("directory-too-long/%s", generateRandomString(10))
+	}
+	if len(fileName) > 250 {
+		fileName = fmt.Sprintf("filename-too-long-%s", generateRandomString(10))
+	}
+
 	filePath := filepath.Join(directory, fileName)
 	fileMutex := getFileMutex(filePath)
 
@@ -195,4 +207,14 @@ func getFileMutex(filePath string) *sync.Mutex {
 		fileMutexes[filePath] = &sync.Mutex{}
 	}
 	return fileMutexes[filePath]
+}
+
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		randomByte, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		b[i] = charset[randomByte.Int64()]
+	}
+	return string(b)
 }

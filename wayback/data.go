@@ -28,17 +28,6 @@ func UnmarshalWB(body []byte, res *[]WB) {
 		return
 	}
 
-	// Early check for resumeKey before starting the loop
-	// if len(records) > 1 {
-	// 	// Check the last row if it contains only 1 element and starts with "eJxLzs"
-	// 	lastRecord := records[len(records)-1]
-	// 	if len(lastRecord) == 1 {
-	// 		if str, ok := lastRecord[0].(string); ok && strings.HasPrefix(str, "eJ") {
-	// 			*resumeKey = str
-	// 		}
-	// 	}
-	// }
-
 	var results []WB
 	for _, record := range records[1:] { // Skip the header row (first row)
 
@@ -74,16 +63,3 @@ func UnmarshalWB(body []byte, res *[]WB) {
 func GetCollectedWBData() []WB {
 	return collectedWBData
 }
-
-// func FilterByStatusCode(status string) []WB {
-// 	uniqueDigests := make(map[string]struct{})
-// 	result := []WB{}
-
-// 	for _, entry := range collectedWBData {
-// 		if _, found := uniqueDigests[entry.Digest]; !found && entry.Statuscode == status {
-// 			uniqueDigests[entry.Digest] = struct{}{}
-// 			result = append(result, entry)
-// 		}
-// 	}
-// 	return result
-// }

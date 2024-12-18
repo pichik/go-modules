@@ -1,6 +1,7 @@
-package request
+package data
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
@@ -15,7 +16,9 @@ import (
 	"github.com/pichik/go-modules/misc"
 )
 
-func setCookies(cookie string) []http.Cookie {
+var RequestCancel context.CancelFunc
+
+func SetCookies(cookie string) []http.Cookie {
 	cookieName := regexp.MustCompile(`(^|;)\s*(.*?)\s*=`)
 	cookieValue := regexp.MustCompile(`\=\s*(.*?)\s*(;|$)`)
 
@@ -31,7 +34,7 @@ func setCookies(cookie string) []http.Cookie {
 	return cookies
 }
 
-func setHeaders(headers []string) map[string]string {
+func SetHeaders(headers []string) map[string]string {
 	headerRegex := regexp.MustCompile(`(^[^\:]*): ?(.*$)`)
 	tempHeaders := map[string]string{}
 	for _, v := range headers {
@@ -39,25 +42,23 @@ func setHeaders(headers []string) map[string]string {
 		tempHeaders[cn[1]] = cn[2]
 
 	}
-	tempHeaders["User-Agent"] = agentFlag
-	tempHeaders["Origin"] = originFlag
 	return tempHeaders
 }
 
-func setClient() {
+func SetClient(proxyip string, forceHTTP2 bool, timeout time.Duration) *http.Client {
 	var proxy func(*http.Request) (*url.URL, error)
 
-	if proxyFlag != "" {
-		parsedProxy, err := url.Parse(proxyFlag)
+	if proxyip != "" {
+		parsedProxy, err := url.Parse(proxyip)
 		if err != nil {
 			misc.PrintError("Invalid proxy url", err)
-			return
+			os.Exit(1)
 		}
 		// Use http.ProxyURL to create a proxy function
 		proxy = http.ProxyURL(parsedProxy)
 	}
 
-	client = &http.Client{
+	client := &http.Client{
 		Timeout: time.Second * timeout,
 
 		//Dont follow redirects
@@ -65,7 +66,7 @@ func setClient() {
 			return http.ErrUseLastResponse
 		},
 		Transport: &http.Transport{
-			ForceAttemptHTTP2: ForceHTTP2Flag, // Forces HTTP/2
+			ForceAttemptHTTP2: forceHTTP2, // Forces HTTP/2
 			Dial: (&net.Dialer{
 				Timeout: timeout * time.Second,
 			}).Dial,
@@ -82,16 +83,17 @@ func setClient() {
 			Proxy: proxy,
 		},
 	}
+	return client
 }
 
-func interruptMonitor() {
+func InterruptMonitor() {
 	sigChan := make(chan os.Signal, 2)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		for range sigChan {
-			if requestCancel != nil {
-				requestCancel()
+			if RequestCancel != nil {
+				RequestCancel()
 			}
 			//Add empty line
 			fmt.Println()

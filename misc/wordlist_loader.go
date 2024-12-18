@@ -18,17 +18,11 @@ type API struct {
 
 var EndpointData = make(map[string][]string)
 
-var Bypasses []string
-
 var wordlistUrl = string("raw.githubusercontent.com/pichik/wordlists/main/")
 
 func LoadApis() {
 	_, ApiData.Actions = LoadGithubWordlist("apis/actions.txt")
 	_, ApiData.Objects = LoadGithubWordlist("apis/objects.txt")
-}
-
-func LoadBypasses() {
-	_, Bypasses = LoadGithubWordlist("bypasses.txt")
 }
 
 func LoadEndpoints(tag string) {
@@ -74,6 +68,6 @@ func errorCheck(wordlist string, err error) {
 	if err == nil {
 		return
 	}
-	fmt.Printf("%sUnable to retreive %s:\n\t%s%s\nCheck %shttps://github.com/pichik/thetool/tree/main/wordlists%s for available wordlists\n", Red, wordlist, err, White, Blue, White)
+	PrintError(fmt.Sprintf("Unable to retreive %s:\n\t\nCheck https://github.com/pichik/thetool/tree/main/wordlists for available wordlists\n", wordlist), err)
 	os.Exit(0)
 }

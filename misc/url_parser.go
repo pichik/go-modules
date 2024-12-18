@@ -35,12 +35,11 @@ func ParseUrl(u string) ParsedUrl {
 	if err != nil {
 		parsedUrl.Error = err
 		parsedUrl.Url = u
-
 		return parsedUrl
 	}
 
 	parsedUrl.Protocol = pu.Scheme
-	if !strings.Contains(parsedUrl.Protocol, "http") {
+	if parsedUrl.Protocol == "" {
 		parsedUrl.Protocol = "https"
 	}
 
@@ -74,7 +73,6 @@ func ParseUrl(u string) ParsedUrl {
 	if strings.ContainsAny(pu.RawPath, "[{(;%") || strings.Contains(parsedUrl.Path, "\\u00") {
 		parsedUrl.Error = errors.New("Incomplete url")
 	}
-
 	return parsedUrl
 }
 

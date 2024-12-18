@@ -3,10 +3,12 @@ package request
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/pichik/go-modules/misc"
+	"github.com/pichik/go-modules/request/data"
 	"github.com/pichik/go-modules/tool"
 )
 
@@ -18,11 +20,10 @@ var cookieFlag, agentFlag, originFlag, bodyFlag, httpMethodFlag, proxyFlag strin
 var NormalizeFlag, ForceHTTP2Flag bool
 var timeoutFlag, retriesFlag int
 var headersFlag tool.ArrayStringFlag
+
 var client *http.Client
-var timeout time.Duration
 
 var RequestBase misc.RequestData
-var requestCancel context.CancelFunc
 
 func (util Request) SetupFlags() []tool.UtilData {
 	var flags []tool.FlagData
@@ -124,25 +125,26 @@ func (util Request) SetupFlags() []tool.UtilData {
 func (util Request) SetupData() {
 	misc.Normalize = NormalizeFlag
 
+	headersFlag = append(headersFlag, fmt.Sprintf("Origin: %s", originFlag))
+	headersFlag = append(headersFlag, fmt.Sprintf("User-Agent: %s", agentFlag))
+
 	RequestBase = misc.RequestData{
 		Method:  httpMethodFlag,
-		Cookies: setCookies(cookieFlag),
-		Headers: setHeaders(headersFlag),
+		Cookies: data.SetCookies(cookieFlag),
+		Headers: data.SetHeaders(headersFlag),
 	}
-	timeout = time.Duration(timeoutFlag)
-
 	RequestBase.RequestBody = bodyFlag
 	RequestBase.ReqBody = bytes.NewBuffer([]byte(bodyFlag))
 
-	setClient()
-	interruptMonitor()
+	client = data.SetClient(proxyFlag, ForceHTTP2Flag, time.Duration(timeoutFlag))
+	data.InterruptMonitor()
 }
 
 func CreateRequest(requestData *misc.RequestData) {
 	client.CloseIdleConnections()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*timeout)
-	requestCancel = cancel
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutFlag))
+	data.RequestCancel = cancel
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, requestData.Method, requestData.ParsedUrl.Url, requestData.ReqBody)
@@ -171,7 +173,10 @@ func sendRequest(requestData *misc.RequestData, req *http.Request) {
 	}
 
 	defer res.Body.Close()
-	readResponse(requestData, res)
+
+	if err := data.ReadResponse(requestData, res); err != nil {
+		repeatRequest(requestData, err, "Reading response Error: ")
+	}
 }
 
 func repeatRequest(requestData *misc.RequestData, err error, errString string) {

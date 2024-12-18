@@ -1,4 +1,4 @@
-package request
+package data
 
 import (
 	"bytes"
@@ -11,7 +11,9 @@ import (
 	"github.com/pichik/go-modules/misc"
 )
 
-func readResponse(requestData *misc.RequestData, res *http.Response) {
+var backslashreg = regexp.MustCompile(`\\([^a-zA-Z0-9]|$)`)
+
+func ReadResponse(requestData *misc.RequestData, res *http.Response) error {
 
 	var reader io.Reader
 	var err error
@@ -22,7 +24,7 @@ func readResponse(requestData *misc.RequestData, res *http.Response) {
 		if err != nil {
 			requestData.Error = err
 			misc.PrintError("Gzip read", err)
-			return
+			return err
 		}
 	} else {
 		reader = res.Body
@@ -33,8 +35,7 @@ func readResponse(requestData *misc.RequestData, res *http.Response) {
 	io.Copy(&buffer, reader)
 
 	if err != nil {
-		repeatRequest(requestData, err, "Reading response Error: ")
-		return
+		return err
 	}
 	requestData.ResponseContentLength = len(buffer.Bytes())
 	requestData.ResponseBody = string(buffer.Bytes())
@@ -46,7 +47,13 @@ func readResponse(requestData *misc.RequestData, res *http.Response) {
 	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\x27", "'", -1)
 	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\x26", "&", -1)
 	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "&amp;", "&", -1)
-	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\/", "/", -1)
+	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\t", " ", -1)
+	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\n", " ", -1)
+	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\r", " ", -1)
+	// requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\/", "/", -1)
+	// Remove all backslashes that are not followed by alphanum characters
+	requestData.ResponseBody = strings.Replace(requestData.ResponseBody, "\\\\", "\\", -1)
+	requestData.ResponseBody = backslashreg.ReplaceAllString(requestData.ResponseBody, "")
 
 	requestData.ResponseStatus = res.StatusCode
 
@@ -57,4 +64,6 @@ func readResponse(requestData *misc.RequestData, res *http.Response) {
 		requestData.ResponseContentType = filteredContentType[1]
 	}
 	requestData.ResponseHeaders = res.Header
+
+	return nil
 }

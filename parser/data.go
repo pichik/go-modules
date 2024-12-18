@@ -9,6 +9,7 @@ import (
 )
 
 type Filters struct {
+	Type        string
 	Name        string
 	RegexString string
 	RegexPart   int
@@ -43,17 +44,17 @@ func compileFilters() {
 		filter.Regex = regexp.MustCompile(fmt.Sprintf(`%s`, filter.RegexString))
 
 		// Check if the key exists in the map
-		if _, exists := parserDataTemplate[filter.Name]; !exists {
+		if _, exists := parserDataTemplate[filter.Type]; !exists {
 			// Initialize a new ParserData entry
-			parserDataTemplate[filter.Name] = ParserData{
+			parserDataTemplate[filter.Type] = ParserData{
 				Filters: []Filters{filter},
 				Results: []string{},
 			}
 		} else {
 			// Append the filter to the existing entry
-			parserData := parserDataTemplate[filter.Name]
+			parserData := parserDataTemplate[filter.Type]
 			parserData.Filters = append(parserData.Filters, filter)
-			parserDataTemplate[filter.Name] = parserData
+			parserDataTemplate[filter.Type] = parserData
 		}
 	}
 

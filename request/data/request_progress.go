@@ -1,4 +1,4 @@
-package request
+package data
 
 import (
 	"fmt"
@@ -8,6 +8,13 @@ import (
 
 	"github.com/pichik/go-modules/misc"
 )
+
+var startTime time.Time
+var Resulted int
+var CurrentThreads int
+
+var ProgressCounter int
+var ProgressMax int
 
 func PrintUrl(requestData misc.RequestData, save bool) {
 	var redirect string
@@ -45,22 +52,24 @@ func PrintUrl(requestData misc.RequestData, save bool) {
 	}
 }
 
-var startTime time.Time
-var Resulted int
-
-func PrintProgress(curr int, max int) {
+func PrintProgress() {
 
 	currentTime := time.Now()
 	seconds := int(currentTime.Sub(startTime).Seconds())
 	var persec int
 	var estimatedTime int
+
+	//Check if more requests are processed in one second, or one request is processed in more seconds and calculate maximum time
 	if seconds > 0 {
-		persec = curr / seconds
+		persec = ProgressCounter / seconds
 		if persec > 0 {
-			estimatedTime = max / persec
+			estimatedTime = ProgressMax / persec
+		} else {
+			persec = seconds / ProgressCounter
+			estimatedTime = ProgressMax * persec
 		}
 	}
-	fmt.Fprintf(os.Stderr, "%sProgress: [(%d/%d)/%d | %s/%s] [%d r/s]", "\r", Resulted, curr, max, misc.ReadableTime(seconds), misc.ReadableTime(estimatedTime), currentThreads)
+	fmt.Fprintf(os.Stderr, "\rProgress: [(%d/%d)/%d | %s/%s] [%d r/s]", Resulted, ProgressCounter, ProgressMax, misc.ReadableTime(seconds), misc.ReadableTime(estimatedTime), CurrentThreads)
 }
 
 func SetSartTime() {

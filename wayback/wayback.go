@@ -71,19 +71,20 @@ func (util Wayback) SetupFlags() []tool.UtilData {
 }
 
 func (util Wayback) SetupData() {
+	request.NormalizeFlag = false
+	request.ThreadsFlag = -4
+
 	var ut []tool.IUtil
 	ut = append(ut, request.RequestFlow{})
 	for _, u := range ut {
 		u.SetupData()
 	}
-	request.ThreadsFlag = -4
 
 }
 
 func HandleResponse(requestData misc.RequestData) ([]string, *misc.ParsedUrl) {
 
-	// check if there's results, wayback's pagination response
-	// is not always correct when using a filter
+	// check if there's results, used instead of pagination, as wayback's pagination response is not always correct when using a filter
 	if requestData.ResponseStatus != 200 {
 		return []string{}, nil
 	}
@@ -92,10 +93,9 @@ func HandleResponse(requestData misc.RequestData) ([]string, *misc.ParsedUrl) {
 	UnmarshalWB(requestData.ResponseBodyBytes, &res)
 
 	rawUrls := getRawUrls(res)
-	// nextUrl := buildResumeUrl(requestData.ParsedUrl, resumeKey)
 
 	//Prevent creating additional requests if response contains only few urls
-	if requestData.ResponseContentLength < 2000 {
+	if requestData.ResponseContentLength < 10000 {
 		return rawUrls, nil
 	}
 	nextUrl := buildNextPageUrl(requestData.ParsedUrl)

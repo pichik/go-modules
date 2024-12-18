@@ -38,7 +38,9 @@ func (i *ArrayStringFlag) Set(value string) error {
 func CreateFlagSet(t ToolData) *ToolData {
 	s := t.Description
 	flagSet := flag.NewFlagSet(s, flag.ExitOnError)
-	toolData = &ToolData{FlagSet: flagSet}
+	// toolData = &ToolData{FlagSet: flagSet}
+	toolData = &t
+	t.FlagSet = flagSet
 	return toolData
 }
 
@@ -76,7 +78,7 @@ func SetupFlags() {
 }
 
 func UpdateFlagUsageHelp() {
-	PrintToolName(toolData.AName)
+	printToolName(toolData.AName)
 	toolData.FlagSet.Usage = func() {
 		PrintToolHelp(*toolData)
 	}

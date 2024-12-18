@@ -1,4 +1,4 @@
-package request
+package data
 
 import (
 	"sync"
@@ -43,8 +43,9 @@ func makeInfinite() (chan<- interface{}, <-chan interface{}) {
 	return in, out
 }
 
-// go through all urls
-func throughInfinite(wg *sync.WaitGroup, iTool IFlowTool) chan<- interface{} {
+type ProcessFunc func(misc.RequestData, *sync.Mutex)
+
+func ThroughInfinite(wg *sync.WaitGroup, process ProcessFunc) chan<- interface{} {
 	var m sync.Mutex
 
 	in, out := makeInfinite()
@@ -56,10 +57,10 @@ func throughInfinite(wg *sync.WaitGroup, iTool IFlowTool) chan<- interface{} {
 			localV := v
 			go func() {
 				Resulted++
-				PrintProgress(progressCounter, progressMax)
+				PrintProgress()
 
 				requestData := localV.(misc.RequestData)
-				iTool.Results(requestData, &m)
+				process(requestData, &m) // Call the provided function
 				wg.Done()
 			}()
 		}
@@ -68,3 +69,29 @@ func throughInfinite(wg *sync.WaitGroup, iTool IFlowTool) chan<- interface{} {
 
 	return in
 }
+
+// // go through all urls
+// func throughInfinite(wg *sync.WaitGroup, iTool IFlowTool) chan<- interface{} {
+// 	var m sync.Mutex
+
+// 	in, out := makeInfinite()
+// 	wg.Add(1)
+
+// 	go func() {
+// 		for v := range out {
+// 			wg.Add(1)
+// 			localV := v
+// 			go func() {
+// 				data.Resulted++
+// 				data.PrintProgress(progressCounter, progressMax)
+
+// 				requestData := localV.(misc.RequestData)
+// 				iTool.Results(requestData, &m)
+// 				wg.Done()
+// 			}()
+// 		}
+// 		wg.Done()
+// 	}()
+
+// 	return in
+// }

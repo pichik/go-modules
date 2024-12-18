@@ -13,34 +13,10 @@ type Parser struct {
 	UtilData *tool.UtilData
 }
 
-var IncludeUrlsFlag, includeGithubDataFlag, includeCustomDataFlag bool
+var includeUrls, includeGithubData = true, true
 
 func (util Parser) SetupFlags() []tool.UtilData {
 	var flags []tool.FlagData
-	flags = append(flags,
-		tool.FlagData{
-			Name:        "su",
-			Description: "Include Urls",
-			Required:    false,
-			Def:         false,
-			VarBool:     &IncludeUrlsFlag,
-		})
-	flags = append(flags,
-		tool.FlagData{
-			Name:        "sg",
-			Description: "Include github data",
-			Required:    false,
-			Def:         false,
-			VarBool:     &includeGithubDataFlag,
-		})
-	flags = append(flags,
-		tool.FlagData{
-			Name:        "sc",
-			Description: "Include custom data",
-			Required:    false,
-			Def:         false,
-			VarBool:     &includeCustomDataFlag,
-		})
 
 	util.UtilData.Name = "Scrape custom data and urls"
 	util.UtilData.FlagDatas = flags
@@ -62,7 +38,11 @@ func (util Parser) SetupData() {
 	}
 }
 
-func ParseDirectory(currentUrl *misc.ParsedUrl) (map[string]ParserData, []misc.ParsedUrl) {
+// Specify which data to get only when parsing recursively directory, as it may take too long to get all of them
+func ParseDirectory(currentUrl *misc.ParsedUrl, urls bool, githubData bool) (map[string]ParserData, []misc.ParsedUrl) {
+	includeUrls = urls
+	includeGithubData = githubData
+
 	recursiveCurrentDir = true
 	return startParsing("", currentUrl)
 }
